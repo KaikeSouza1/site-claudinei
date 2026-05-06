@@ -17,7 +17,7 @@ export default function EditarImovel() {
   const [formData, setFormData] = useState({
     codigo: '', titulo: '', descricao: '', preco: '', tipo: 'Casa', finalidade: 'Venda',
     cidade: '', bairro: '', endereco: '', latitude: '', longitude: '',
-    quartos: 0, banheiros: 0, vagas: 0, area: 0, imagem_url: '', destaque: false, ativo: true,
+    quartos: 0, banheiros: 0, vagas: 0, area: 0, imagem_url: '', destaque: false, ativo: true, status: 'disponivel',
   });
 
   const [galeria, setGaleria] = useState<string[]>([]);
@@ -60,6 +60,7 @@ export default function EditarImovel() {
           imagem_url: imovelData.imagem_url || '',
           destaque: imovelData.destaque || false,
           ativo: imovelData.ativo !== false,
+          status: imovelData.status || 'disponivel',
         });
 
         // 2. Puxa as fotos da galeria (tabela imovel_fotos)
@@ -341,6 +342,73 @@ export default function EditarImovel() {
                 <span className="text-sm text-slate-300 uppercase tracking-widest">Anúncio Ativo</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        {/* CONTROLE DE STATUS */}
+        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4">Status do Imóvel</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="radio" 
+                name="status" 
+                value="disponivel" 
+                checked={formData.status === 'disponivel'} 
+                onChange={handleInputChange} 
+                className="w-5 h-5 accent-green-500 cursor-pointer" 
+              />
+              <div>
+                <span className="text-sm font-bold text-green-400 uppercase tracking-widest block">Disponível</span>
+                <span className="text-xs text-slate-400">Imóvel ativo para venda/aluguel</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="radio" 
+                name="status" 
+                value="reservado" 
+                checked={formData.status === 'reservado'} 
+                onChange={handleInputChange} 
+                className="w-5 h-5 accent-yellow-500 cursor-pointer" 
+              />
+              <div>
+                <span className="text-sm font-bold text-yellow-400 uppercase tracking-widest block">Reservado</span>
+                <span className="text-xs text-slate-400">Em negociação</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="radio" 
+                name="status" 
+                value="vendido" 
+                checked={formData.status === 'vendido'} 
+                onChange={handleInputChange} 
+                className="w-5 h-5 accent-red-500 cursor-pointer" 
+              />
+              <div>
+                <span className="text-sm font-bold text-red-400 uppercase tracking-widest block">Vendido</span>
+                <span className="text-xs text-slate-400">Transação concluída</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="radio" 
+                name="status" 
+                value="alugado" 
+                checked={formData.status === 'alugado'} 
+                onChange={handleInputChange} 
+                className="w-5 h-5 accent-blue-500 cursor-pointer" 
+              />
+              <div>
+                <span className="text-sm font-bold text-blue-400 uppercase tracking-widest block">Alugado</span>
+                <span className="text-xs text-slate-400">Contrato ativo</span>
+              </div>
+            </label>
           </div>
         </div>
 

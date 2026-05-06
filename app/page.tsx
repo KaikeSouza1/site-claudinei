@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, MapPin, Bed, Bath, Car, Maximize } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import SmartSearch from '@/components/SmartSearch';
+import Link from 'next/link';
 
 export default function Home() {
   const [abaAtiva, setAbaAtiva] = useState('Venda');
@@ -22,6 +23,7 @@ export default function Home() {
         .eq('ativo', true)
         .eq('destaque', true)
         .eq('finalidade', abaAtiva)
+        .or('status.is.null,status.eq.disponivel,status.eq.reservado') // Só mostra disponíveis, reservados ou sem status definido
         .limit(20); // Traz até 20 destaques para poder embaralhar
 
       if (data && !error) {
@@ -167,7 +169,7 @@ export default function Home() {
             
             {/* Card Principal (Esquerda - 8 colunas) */}
             {imoveisDestaque[0] && (
-              <div className="lg:col-span-8 h-[400px] lg:h-full relative group cursor-pointer overflow-hidden bg-slate-800">
+              <Link href={`/imovel/${imoveisDestaque[0].id}`} className="lg:col-span-8 h-[400px] lg:h-full relative group cursor-pointer overflow-hidden bg-slate-800 block">
                 <div 
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                   style={{ backgroundImage: `url(${imoveisDestaque[0].imagem_url || ''})` }}
@@ -195,7 +197,7 @@ export default function Home() {
                     {imoveisDestaque[0].area > 0 && <span className="flex items-center gap-1"><Maximize size={14} className="text-slate-400"/> {imoveisDestaque[0].area}m²</span>}
                   </div>
                 </div>
-              </div>
+              </Link>
             )}
 
             {/* Cards Secundários (Direita - 4 colunas empilhados) */}
@@ -203,7 +205,7 @@ export default function Home() {
               
               {/* Card Secundário 1 */}
               {imoveisDestaque[1] && (
-                <div className="flex-1 h-[300px] lg:h-auto relative group cursor-pointer overflow-hidden bg-slate-800">
+                <Link href={`/imovel/${imoveisDestaque[1].id}`} className="flex-1 h-[300px] lg:h-auto relative group cursor-pointer overflow-hidden bg-slate-800 block">
                   <div 
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                     style={{ backgroundImage: `url(${imoveisDestaque[1].imagem_url || ''})` }}
@@ -222,12 +224,12 @@ export default function Home() {
                       {imoveisDestaque[1].quartos > 0 && <span className="flex items-center gap-1"><Bed size={12} className="text-slate-400"/> {imoveisDestaque[1].quartos} qts</span>}
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
 
               {/* Card Secundário 2 */}
               {imoveisDestaque[2] && (
-                <div className="flex-1 h-[300px] lg:h-auto relative group cursor-pointer overflow-hidden bg-slate-800">
+                <Link href={`/imovel/${imoveisDestaque[2].id}`} className="flex-1 h-[300px] lg:h-auto relative group cursor-pointer overflow-hidden bg-slate-800 block">
                   <div 
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                     style={{ backgroundImage: `url(${imoveisDestaque[2].imagem_url || ''})` }}
@@ -246,7 +248,7 @@ export default function Home() {
                       {imoveisDestaque[2].quartos > 0 && <span className="flex items-center gap-1"><Bed size={12} className="text-slate-400"/> {imoveisDestaque[2].quartos} qts</span>}
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
             </div>
           </div>
