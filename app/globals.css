@@ -1,26 +1,21 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Nossas fontes */
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+
+  /* Nossa paleta de cores (Dourado/Areia) */
+  --color-gold: #C5A059;
+  --color-gold-light: #d4b77a;
+  --color-gold-dark: #a38243;
+
+  /* Nosso degradê de fundo */
+  --background-image-luxury-gradient: linear-gradient(to bottom, #04122b, #1a304d, #7c8f9e);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Opcional: Se quiser que o fundo do body já pegue um azul escuro por padrão caso o degradê não carregue */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #020b18;
+  color: #f1f5f9; /* slate-100 */
 }

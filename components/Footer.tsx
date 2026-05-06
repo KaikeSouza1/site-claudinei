@@ -1,36 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Home() {
   return (
-    // Aplicando o degradê personalizado no fundo
-    <main className="min-h-screen bg-luxury-gradient flex flex-col relative overflow-hidden">
+    // Como o Header global já está no layout, ajustamos a main para preencher o resto da tela
+    <main className="flex-1 bg-luxury-gradient flex flex-col relative overflow-hidden">
       
-      {/* HEADER SIMPLES */}
-      <header className="flex justify-between items-center px-10 py-8 max-w-7xl w-full mx-auto relative z-10">
-        <div>
-          <h1 className="font-serif text-2xl tracking-wide text-white">Claudiney W. Otto Junior.</h1>
-          <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016 • CNAI 45505</p>
-        </div>
-        
-        <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">
-          <Link href="#sobre" className="hover:text-gold transition-colors">Sobre</Link>
-          <Link href="#servicos" className="hover:text-gold transition-colors">Serviços</Link>
-          <Link href="#imoveis" className="hover:text-gold transition-colors">Imóveis</Link>
-          <Link href="#contato" className="hover:text-gold transition-colors">Contato</Link>
-        </nav>
-
-        <button className="border border-gold text-gold hover:bg-gold hover:text-[#04122b] transition-all px-6 py-2 text-xs tracking-widest uppercase">
-          Whatsapp
-        </button>
-      </header>
-
       {/* HERO SECTION */}
-      <section className="flex-1 flex items-center justify-center max-w-7xl w-full mx-auto px-10 relative z-10">
+      {/* Adicionei um py-20 para dar um respiro já que o header saiu daqui */}
+      <section className="flex-1 flex items-center justify-center max-w-7xl w-full mx-auto px-10 py-20 relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center w-full">
           
           {/* LADO ESQUERDO: TEXTOS */}
@@ -52,7 +34,7 @@ export default function Home() {
             </h2>
 
             <p className="text-slate-300 max-w-md text-sm leading-relaxed mt-4">
-              Corretor certificado com mais de 10 anos de experiência em imóveis residenciais e comerciais de alto padrão. Cada negociação conduzida com precisão e dedicação total.
+              Corretor e Avaliador Imobiliário certificado com mais de 10 anos de experiência. Especialista em imóveis de alto padrão, garantindo segurança jurídica e precisão na avaliação do seu patrimônio.
             </p>
 
             {/* ESTATÍSTICAS */}
@@ -111,7 +93,7 @@ export default function Home() {
               {/* Etiqueta flutuante sobre a foto */}
               <div className="absolute bottom-6 left-[-40px] bg-[#04122b] border border-gold/30 p-4 shadow-xl">
                 <p className="font-serif text-gold text-lg">Claudiney W. Otto Junior</p>
-                <p className="text-[10px] text-slate-400 tracking-widest uppercase mt-1">Corretor de Imóveis</p>
+                <p className="text-[10px] text-slate-400 tracking-widest uppercase mt-1">Corretor e Avaliador de Imóveis</p>
               </div>
             </div>
           </motion.div>

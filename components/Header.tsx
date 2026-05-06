@@ -1,0 +1,24 @@
+// components/Header.tsx
+import Link from 'next/link';
+
+export default function Header() {
+  return (
+    <header className="flex justify-between items-center px-10 py-8 max-w-7xl w-full mx-auto relative z-50">
+      <div>
+        <h1 className="font-serif text-2xl tracking-wide text-white">Claudiney W. Otto Junior.</h1>
+        <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016 • CNAI 45505</p>
+      </div>
+      
+      <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">
+        <Link href="/" className="hover:text-gold transition-colors">Início</Link>
+        <Link href="/sobre" className="hover:text-gold transition-colors">Sobre</Link>
+        <Link href="/imoveis" className="hover:text-gold transition-colors">Imóveis</Link>
+        <Link href="/contato" className="hover:text-gold transition-colors">Contato</Link>
+      </nav>
+
+      <button className="border border-gold text-gold hover:bg-gold hover:text-[#04122b] transition-all px-6 py-2 text-xs tracking-widest uppercase">
+        Whatsapp
+      </button>
+    </header>
+  );
+}
