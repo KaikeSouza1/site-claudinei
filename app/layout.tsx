@@ -2,8 +2,8 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer"; // <-- Importe o Footer
+// Importamos os componentes condicionais ao invés dos originais
+import { ConditionalHeader, ConditionalFooter } from "@/components/ConditionalLayout";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -21,11 +21,18 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth">
       <body className={`${inter.variable} ${playfair.variable} font-sans bg-[#020b18] text-slate-100 min-h-screen flex flex-col`}>
-        <Header />
-        <div className="flex-1">
+        
+        {/* Renderiza apenas nas rotas públicas */}
+        <ConditionalHeader />
+        
+        {/* CONTEÚDO DA PÁGINA (Login, Admin ou Home) */}
+        <div className="flex-1 flex flex-col">
           {children}
         </div>
-        <Footer /> {/* <-- Adicione o Footer aqui */}
+
+        {/* Renderiza apenas nas rotas públicas */}
+        <ConditionalFooter />
+        
       </body>
     </html>
   );
