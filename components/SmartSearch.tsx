@@ -1,152 +1,169 @@
-// components/SmartSearch.tsx
 'use client'
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, SlidersHorizontal, MapPin, Home, DollarSign, Bed } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, MapPin, Building2, Trees, Leaf, ChevronDown, Filter } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+const tiposUrbano = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Industrial']
+const tiposRural = ['Fazenda', 'Sítio', 'Chácara', 'Área de Plantio', 'Pecuária']
+const tiposAtivos = ['Reflorestamento', 'Reserva Legal', 'Crédito de Carbono']
 
 export default function SmartSearch() {
-  const [abaAtiva, setAbaAtiva] = useState<'inteligente' | 'detalhada'>('inteligente');
-  const router = useRouter();
+  const router = useRouter()
+  const [categoria, setCategoria] = useState<'urbano' | 'rural' | 'ativos'>('urbano')
+  const [tipo, setTipo] = useState('')
+  const [localizacao, setLocalizacao] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
-  // Estados dos formulários (vazios por enquanto, aguardando o backend)
-  const [buscaLivre, setBuscaLivre] = useState('');
-  const [filtros, setFiltros] = useState({
-    finalidade: '',
-    tipo: '',
-    localizacao: '',
-    quartos: ''
-  });
-
-  const realizarBusca = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const params = new URLSearchParams();
-    if (abaAtiva === 'inteligente') {
-      if (buscaLivre.trim()) params.set('busca', buscaLivre.trim())
-    } else {
-      if (filtros.finalidade) params.set('finalidade', filtros.finalidade)
-      if (filtros.tipo) params.set('tipo', filtros.tipo)
-      if (filtros.localizacao) params.set('localizacao', filtros.localizacao.trim())
-      if (filtros.quartos) params.set('busca', `${filtros.quartos} quartos`)
-    }
-
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (tipo) params.append('tipo', tipo)
+    if (localizacao) params.append('busca', localizacao)
+    params.append('categoria', categoria)
+    
     router.push(`/imoveis?${params.toString()}`)
-  };
+  }
 
   return (
-    <div className="w-full bg-[#04122b]/40 backdrop-blur-xl border border-slate-600/50 rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
-      
-      {/* Abas de Navegação */}
-      <div className="flex gap-6 mb-8 border-b border-slate-700/50 pb-4">
-        <button 
-          onClick={() => setAbaAtiva('inteligente')}
-          className={`flex items-center gap-2 text-xs tracking-widest uppercase font-bold transition-colors ${abaAtiva === 'inteligente' ? 'text-gold' : 'text-slate-400 hover:text-slate-200'}`}
-        >
-          <Search size={16} />
-          Busca Inteligente
-        </button>
-        <button 
-          onClick={() => setAbaAtiva('detalhada')}
-          className={`flex items-center gap-2 text-xs tracking-widest uppercase font-bold transition-colors ${abaAtiva === 'detalhada' ? 'text-gold' : 'text-slate-400 hover:text-slate-200'}`}
-        >
-          <SlidersHorizontal size={16} />
-          Busca Detalhada
-        </button>
+    <div className="w-full">
+      {/* Seleção de Categoria (Tabs) */}
+      <div className="flex gap-1 mb-0 ml-4">
+        {[
+          { id: 'urbano', label: 'Urbano', icon: Building2 },
+          { id: 'rural', label: 'Rural', icon: Trees },
+          { id: 'ativos', label: 'Ativos', icon: Leaf },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setCategoria(tab.id as any)
+              setTipo('')
+            }}
+            className={`flex items-center gap-2 px-6 py-3 rounded-t-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+              categoria === tab.id
+                ? 'bg-[#173a57] text-gold border-t border-x border-slate-500/30'
+                : 'bg-[#04122b]/50 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <tab.icon size={14} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Formulários com Animação de Troca */}
-      <AnimatePresence mode="wait">
-        
-        {/* FORMULÁRIO 1: BUSCA ESTILO GOOGLE */}
-        {abaAtiva === 'inteligente' && (
-          <motion.form 
-            key="inteligente"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            onSubmit={realizarBusca}
-            className="flex flex-col md:flex-row gap-4"
+      {/* Card Principal de Busca */}
+      <div className="bg-[#173a57] backdrop-blur-xl border border-slate-500/30 rounded-3xl rounded-tl-none shadow-2xl p-4 md:p-2">
+        <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-center gap-2">
+          
+          {/* Filtro de Tipo (Dinâmico) */}
+          <div className="relative w-full md:w-1/3 group">
+            <div 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full flex items-center gap-3 px-6 py-4 bg-[#04122b]/40 border border-slate-600/30 rounded-2xl cursor-pointer hover:border-gold/50 transition-all"
+            >
+              <Filter size={18} className="text-gold" />
+              <div className="flex-1 text-left">
+                <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">O que procura?</p>
+                <p className="text-sm text-white font-medium truncate">
+                  {tipo || `Todos os ${categoria}s`}
+                </p>
+              </div>
+              <ChevronDown size={16} className={`text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
+
+            {/* Dropdown Customizado */}
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setIsDropdownOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-[#1a2d3d] border border-slate-500/30 rounded-2xl shadow-2xl z-40 overflow-hidden"
+                  >
+                    <div className="p-2 grid grid-cols-1 gap-1">
+                      {(categoria === 'urbano' ? tiposUrbano : categoria === 'rural' ? tiposRural : tiposAtivos).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => {
+                            setTipo(t)
+                            setIsDropdownOpen(false)
+                          }}
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm text-slate-300 hover:bg-gold hover:text-[#04122b] transition-all"
+                        >
+                          {t}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTipo('')
+                          setIsDropdownOpen(false)
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-xl text-sm text-gold border-t border-slate-700 mt-1 hover:bg-slate-700/50"
+                      >
+                        Limpar Filtro
+                      </button>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Input de Localização/Palavra-chave */}
+          <div className="w-full md:flex-1 relative group">
+            <div className="w-full flex items-center gap-3 px-6 py-4 bg-[#04122b]/40 border border-slate-600/30 rounded-2xl focus-within:border-gold/50 transition-all">
+              <MapPin size={18} className="text-gold" />
+              <div className="flex-1">
+                <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">Localização ou Nome</p>
+                <input
+                  type="text"
+                  placeholder={categoria === 'urbano' ? "Ex: Centro, Bairro..." : "Ex: Região, Hectares, Cultivares..."}
+                  className="w-full bg-transparent border-none focus:ring-0 text-sm text-white placeholder:text-slate-600 p-0"
+                  value={localizacao}
+                  onChange={(e) => setLocalizacao(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Botão de Busca */}
+          <button
+            type="submit"
+            className="w-full md:w-auto bg-gold text-[#04122b] hover:bg-white transition-all px-10 py-5 rounded-2xl flex items-center justify-center gap-3 group"
           >
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/70" size={20} />
-              <input 
-                type="text" 
-                value={buscaLivre}
-                onChange={(e) => setBuscaLivre(e.target.value)}
-                placeholder="Ex: Casa com 3 quartos para alugar no Centro..." 
-                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white text-base px-12 py-5 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-400 font-light"
-              />
-            </div>
-            <button type="submit" className="bg-gold text-[#04122b] px-10 py-5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-gold-light transition-all shadow-lg hover:shadow-gold/20 whitespace-nowrap">
-              Pesquisar
-            </button>
-          </motion.form>
-        )}
+            <span className="text-xs font-black uppercase tracking-widest">Buscar Ativos</span>
+            <Search size={20} className="group-hover:scale-110 transition-transform" />
+          </button>
+        </form>
+      </div>
 
-        {/* FORMULÁRIO 2: BUSCA DETALHADA COM PARÂMETROS */}
-        {abaAtiva === 'detalhada' && (
-          <motion.form 
-            key="detalhada"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            onSubmit={realizarBusca}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+      {/* Tags de Sugestão Rápidas */}
+      <div className="mt-4 flex flex-wrap gap-4 px-2">
+        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest flex items-center gap-2">
+          Buscas Frequentes:
+        </p>
+        {(categoria === 'urbano' 
+          ? ['Apartamentos Luxo', 'Lotes Condomínio'] 
+          : categoria === 'rural' 
+            ? ['Áreas acima de 50ha', 'Fazendas de Soja'] 
+            : ['Eucalipto', 'Pinus', 'Reserva Legal']
+        ).map((sugestao) => (
+          <button
+            key={sugestao}
+            type="button"
+            onClick={() => setLocalizacao(sugestao)}
+            className="text-[10px] text-slate-400 hover:text-gold transition-colors border-b border-transparent hover:border-gold pb-0.5"
           >
-            {/* Finalidade */}
-            <div className="relative">
-              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/70" size={16} />
-              <select 
-                value={filtros.finalidade}
-                onChange={(e) => setFiltros({...filtros, finalidade: e.target.value})}
-                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
-              >
-                <option value="">Finalidade</option>
-                <option value="Venda">Comprar</option>
-                <option value="Locacao">Alugar</option>
-              </select>
-            </div>
-
-            {/* Tipo */}
-            <div className="relative">
-              <Home className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/70" size={16} />
-              <select 
-                value={filtros.tipo}
-                onChange={(e) => setFiltros({...filtros, tipo: e.target.value})}
-                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
-              >
-                <option value="">Tipo de Imóvel</option>
-                <option value="Casa">Casa</option>
-                <option value="Apartamento">Apartamento</option>
-                <option value="Terreno">Terreno</option>
-                <option value="Comercial">Comercial</option>
-              </select>
-            </div>
-
-            {/* Localização */}
-            <div className="relative lg:col-span-2">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/70" size={16} />
-              <input 
-                type="text" 
-                value={filtros.localizacao}
-                onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
-                placeholder="Cidade ou Bairro" 
-                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-400"
-              />
-            </div>
-
-            {/* Botão Buscar */}
-            <button type="submit" className="bg-gold text-[#04122b] px-6 py-4 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-gold-light transition-all shadow-lg hover:shadow-gold/20 whitespace-nowrap">
-              Buscar
-            </button>
-          </motion.form>
-        )}
-
-      </AnimatePresence>
+            {sugestao}
+          </button>
+        ))}
+      </div>
     </div>
-  );
+  )
 }
