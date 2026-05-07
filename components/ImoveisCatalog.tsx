@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja', 'Chácara']
 
@@ -61,14 +62,46 @@ export default function ImoveisCatalog({
   const loadImoveis = async (queryFilters: typeof filters) => {
     setLoading(true)
     setError('')
-    const qs = buildQueryString({ ...queryFilters, finalidade: queryFilters.finalidade || defaultFinalidade })
+    
     try {
-      const res = await fetch(`/api/imoveis?${qs}`)
-      if (!res.ok) throw new Error('Não foi possível carregar os imóveis.')
-      const data = await res.json()
-      setImoveis(Array.isArray(data) ? data : [])
+      let query = supabase
+        .from('imoveis')
+        .select('*')
+        .eq('ativo', true)
+        .or('status.is.null,status.eq.disponivel,status.eq.reservado')
+
+      if (defaultFinalidade) {
+        query = query.ilike('finalidade', `%${defaultFinalidade.toLowerCase()}%`)
+      }
+
+      if (queryFilters.tipo) {
+        query = query.eq('tipo', queryFilters.tipo)
+      }
+
+      if (queryFilters.localizacao) {
+        query = query.or(`cidade.ilike.%${queryFilters.localizacao}%,bairro.ilike.%${queryFilters.localizacao}%`)
+      }
+
+      if (queryFilters.busca) {
+        query = query.ilike('titulo', `%${queryFilters.busca}%`)
+      }
+
+      if (queryFilters.minPreco) {
+        query = query.gte('preco', parseFloat(queryFilters.minPreco))
+      }
+      if (queryFilters.maxPreco) {
+        query = query.lte('preco', parseFloat(queryFilters.maxPreco))
+      }
+
+      // CORREÇÃO: Alterado de 'created_at' para 'id' para evitar o erro de coluna inexistente
+      const { data, error: supabaseError } = await query.order('id', { ascending: false })
+
+      if (supabaseError) throw supabaseError
+
+      setImoveis(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao buscar imóveis.')
+      console.error('Erro ao buscar imóveis:', err)
+      setError('Não foi possível carregar os imóveis.')
       setImoveis([])
     } finally {
       setLoading(false)
@@ -96,8 +129,6 @@ export default function ImoveisCatalog({
 
   return (
     <main className="flex-1 bg-[#020b18] text-slate-100 min-h-screen">
-
-      {/* ── HERO BANNER ── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-luxury-gradient opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020b18]" />
@@ -118,12 +149,9 @@ export default function ImoveisCatalog({
         </div>
       </div>
 
-      {/* ── BARRA DE BUSCA COMPACTA ── */}
       <div className="sticky top-0 z-30 bg-[#020b18]/95 backdrop-blur-xl border-b border-slate-800/60">
         <div className="max-w-7xl mx-auto px-6 md:px-10 py-4">
           <form onSubmit={handleSubmit} className="flex items-center gap-3">
-
-            {/* Campo de busca principal */}
             <div className="flex-1 relative">
               <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
               <input
@@ -135,7 +163,6 @@ export default function ImoveisCatalog({
               />
             </div>
 
-            {/* Botão filtros avançados */}
             <button
               type="button"
               onClick={() => setShowFilters(v => !v)}
@@ -162,7 +189,6 @@ export default function ImoveisCatalog({
             </button>
           </form>
 
-          {/* Painel de filtros expansível */}
           {showFilters && (
             <div className="mt-3 pt-3 border-t border-slate-800/60">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -210,23 +236,19 @@ export default function ImoveisCatalog({
         </div>
       </div>
 
-      {/* ── RESULTADOS ── */}
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10">
-
-        {/* Contador */}
         <div className="flex items-center justify-between mb-8">
-          <p className="text-slate-500 text-sm">
+          <div className="text-slate-500 text-sm">
             {loading ? (
               <span className="animate-pulse">Buscando imóveis...</span>
             ) : (
-              <>
+              <div>
                 <span className="text-white font-semibold text-lg font-serif">{imoveis.length}</span>
                 <span className="ml-2">{imoveis.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}</span>
-              </>
+              </div>
             )}
-          </p>
+          </div>
 
-          {/* Links de navegação entre venda/aluguel */}
           <div className="hidden md:flex items-center gap-1 bg-[#04122b]/60 border border-slate-800 rounded-full px-2 py-1.5">
             <Link
               href="/imoveis/venda"
@@ -251,7 +273,6 @@ export default function ImoveisCatalog({
           </div>
         </div>
 
-        {/* Estados */}
         {error && (
           <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-8 text-red-400 text-sm text-center">
             {error}
@@ -276,16 +297,14 @@ export default function ImoveisCatalog({
           </div>
         )}
 
-        {/* Grade de cards */}
         {!loading && imoveis.length > 0 && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {imoveis.map((imovel, i) => (
+            {imoveis.map((imovel) => (
               <Link
                 key={imovel.id}
                 href={`/imovel/${imovel.id}`}
                 className="group flex flex-col rounded-2xl border border-slate-800/60 bg-[#04122b]/30 overflow-hidden hover:-translate-y-1 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_8px_40px_rgba(197,160,89,0.08)]"
               >
-                {/* Imagem */}
                 <div className="relative h-52 bg-[#04122b] overflow-hidden">
                   {imovel.imagem_url ? (
                     <img
@@ -299,14 +318,11 @@ export default function ImoveisCatalog({
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#04122b] via-transparent to-transparent opacity-60" />
-
-                  {/* Tag tipo */}
                   <div className="absolute top-4 left-4 bg-[#020b18]/80 backdrop-blur-sm text-gold text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-gold/20">
                     {imovel.tipo}
                   </div>
                 </div>
 
-                {/* Conteúdo */}
                 <div className="flex flex-col flex-1 p-5">
                   <div className="flex items-center gap-1.5 text-slate-500 text-xs mb-2">
                     <MapPin size={11} className="text-gold flex-shrink-0" />
@@ -317,7 +333,6 @@ export default function ImoveisCatalog({
                     {imovel.titulo}
                   </h3>
 
-                  {/* Atributos */}
                   {(imovel.quartos > 0 || imovel.banheiros > 0 || imovel.vagas > 0 || imovel.area > 0) && (
                     <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 mb-4 border-t border-slate-800/60 pt-3 mt-auto">
                       {imovel.quartos > 0 && (
@@ -347,7 +362,6 @@ export default function ImoveisCatalog({
                     </div>
                   )}
 
-                  {/* Preço */}
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800/60">
                     <span className="font-serif text-xl text-gold">{formatMoney(imovel.preco)}</span>
                     <span className="text-[10px] text-slate-600 group-hover:text-gold transition-colors uppercase tracking-wider font-bold">
@@ -360,7 +374,6 @@ export default function ImoveisCatalog({
           </div>
         )}
 
-        {/* Skeleton loading */}
         {loading && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
