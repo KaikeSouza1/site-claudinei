@@ -95,7 +95,7 @@ export default function ImovelPage() {
 
   /* ── Loading ── */
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', paddingTop: 96, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <motion.div animate={{ scale: [1,1.1,1], opacity: [0.4,1,0.4] }} transition={{ duration: 1.5, repeat: Infinity }}>
         <HomeIcon size={44} color={C.gold} strokeWidth={1.5} />
       </motion.div>
@@ -103,7 +103,7 @@ export default function ImovelPage() {
   );
 
   if (!imovel) return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', paddingTop: 96, background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <HomeIcon size={56} color="#1e3a5f" />
       <p style={{ color: '#64748b', marginTop: 16, fontSize: 18 }}>Imóvel não encontrado</p>
       <Link href="/" style={{ marginTop: 24, padding: '12px 32px', background: C.gold, color: C.card, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>
@@ -118,39 +118,7 @@ export default function ImovelPage() {
   const extra = galeria.length - 5;        // fotos além das 5 exibidas
 
   return (
-    <main style={{ background: C.bg, minHeight: '100vh', overflowX: 'hidden' }}>
-
-      {/* ════════════════════════
-          HEADER SIMPLES
-      ════════════════════════ */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(2,11,24,0.95)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${C.bs}` }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button
-            onClick={() => router.back()}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', transition: 'color .2s', padding: 0 }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.gold; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
-          >
-            <ArrowLeft size={18} />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, display: 'none' }} className="sm-show">Voltar</span>
-          </button>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ width: 36, height: 36, background: 'transparent', border: `1px solid ${C.bs}`, color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = C.gold; el.style.color = C.gold; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = C.bs; el.style.color = '#64748b'; }}
-            >
-              <Share2 size={15} />
-            </button>
-            <button
-              onClick={() => setFav(f => !f)}
-              style={{ width: 36, height: 36, background: 'transparent', border: `1px solid ${fav ? 'rgba(239,68,68,0.4)' : C.bs}`, color: fav ? '#ef4444' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s' }}
-            >
-              <Heart size={15} fill={fav ? '#ef4444' : 'none'} />
-            </button>
-          </div>
-        </div>
-      </div>
+    <main style={{ background: C.bg, minHeight: '100vh', overflowX: 'hidden', paddingTop: 96 }}>
 
       {/* ════════════════════════
           CONTEÚDO PRINCIPAL

@@ -21,8 +21,18 @@ export default function SmartSearch() {
 
   const realizarBusca = (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui depois vamos enviar os parâmetros para a página de resultados (/imoveis)
-    console.log("Buscando...", abaAtiva === 'inteligente' ? buscaLivre : filtros);
+
+    const params = new URLSearchParams();
+    if (abaAtiva === 'inteligente') {
+      if (buscaLivre.trim()) params.set('busca', buscaLivre.trim())
+    } else {
+      if (filtros.finalidade) params.set('finalidade', filtros.finalidade)
+      if (filtros.tipo) params.set('tipo', filtros.tipo)
+      if (filtros.localizacao) params.set('localizacao', filtros.localizacao.trim())
+      if (filtros.quartos) params.set('busca', `${filtros.quartos} quartos`)
+    }
+
+    router.push(`/imoveis?${params.toString()}`)
   };
 
   return (

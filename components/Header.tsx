@@ -12,8 +12,8 @@ export default function Header() {
         
         <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">
           <Link href="/" className="hover:text-gold transition-colors">Início</Link>
-          <Link href="#sobre" className="hover:text-gold transition-colors">Sobre</Link>
-          <Link href="/imoveis" className="hover:text-gold transition-colors">Imóveis</Link>
+          <Link href="/imoveis/aluguel" className="hover:text-gold transition-colors">Locação</Link>
+          <Link href="/imoveis/venda" className="hover:text-gold transition-colors">Venda</Link>
           <Link href="#contato" className="hover:text-gold transition-colors">Contato</Link>
         </nav>
 
