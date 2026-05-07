@@ -1,17 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, Home } from 'lucide-react'
+import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
 
-const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja']
+const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja', 'Chácara']
 
 function formatMoney(value: number) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(value)
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
 function buildQueryString(filters: Record<string, string>) {
@@ -29,52 +26,44 @@ type ImoveisCatalogProps = {
   activeSlug?: 'venda' | 'aluguel'
 }
 
-export default function ImoveisCatalog({ defaultFinalidade = '', pageTitle, pageSubtitle, activeSlug }: ImoveisCatalogProps) {
+export default function ImoveisCatalog({
+  defaultFinalidade = '',
+  pageTitle,
+  pageSubtitle,
+  activeSlug,
+}: ImoveisCatalogProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
-
-  const parseParams = () => {
-    const params = {
-      finalidade: searchParams.get('finalidade') ?? defaultFinalidade,
-      tipo: searchParams.get('tipo') ?? '',
-      localizacao: searchParams.get('localizacao') ?? '',
-      busca: searchParams.get('busca') ?? '',
-      minPreco: searchParams.get('minPreco') ?? '',
-      maxPreco: searchParams.get('maxPreco') ?? ''
-    }
-    return params
-  }
-
-  const [filters, setFilters] = useState(parseParams())
+  const [showFilters, setShowFilters] = useState(false)
   const [imoveis, setImoveis] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const currentQuery = useMemo(
+    () => ({
+      finalidade: defaultFinalidade,
+      tipo: searchParams.get('tipo') ?? '',
+      localizacao: searchParams.get('localizacao') ?? '',
+      busca: searchParams.get('busca') ?? '',
+      minPreco: searchParams.get('minPreco') ?? '',
+      maxPreco: searchParams.get('maxPreco') ?? '',
+    }),
+    [searchParams, defaultFinalidade]
+  )
+
+  const [filters, setFilters] = useState(currentQuery)
   const routeBase = activeSlug ? `/imoveis/${activeSlug}` : '/imoveis'
 
   useEffect(() => {
-    setFilters(parseParams())
-  }, [searchParams, defaultFinalidade])
-
-  const searchLabel = useMemo(() => {
-    if (filters.finalidade) {
-      return filters.finalidade.toLowerCase().includes('loc') ? 'Aluguel' : 'Venda'
-    }
-    return 'Todos'
-  }, [filters.finalidade])
+    setFilters(currentQuery)
+  }, [currentQuery])
 
   const loadImoveis = async (queryFilters: typeof filters) => {
     setLoading(true)
     setError('')
-
-    const params = {
-      ...queryFilters,
-      finalidade: queryFilters.finalidade || defaultFinalidade
-    }
-    const queryString = buildQueryString(params)
-
+    const qs = buildQueryString({ ...queryFilters, finalidade: queryFilters.finalidade || defaultFinalidade })
     try {
-      const res = await fetch(`/api/imoveis?${queryString}`)
+      const res = await fetch(`/api/imoveis?${qs}`)
       if (!res.ok) throw new Error('Não foi possível carregar os imóveis.')
       const data = await res.json()
       setImoveis(Array.isArray(data) ? data : [])
@@ -87,212 +76,306 @@ export default function ImoveisCatalog({ defaultFinalidade = '', pageTitle, page
   }
 
   useEffect(() => {
-    loadImoveis(parseParams())
-  }, [searchParams, defaultFinalidade])
+    loadImoveis(currentQuery)
+  }, [currentQuery])
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const next = {
-      ...filters,
-      finalidade: filters.finalidade || defaultFinalidade
-    }
-    const queryString = buildQueryString(next)
-    router.replace(`${routeBase}${queryString ? `?${queryString}` : ''}`)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const qs = buildQueryString({ ...filters, finalidade: defaultFinalidade })
+    router.replace(`${routeBase}${qs ? `?${qs}` : ''}`)
+    setShowFilters(false)
   }
 
   const handleReset = () => {
-    const baseFilters = {
-      finalidade: defaultFinalidade,
-      tipo: '',
-      localizacao: '',
-      busca: '',
-      minPreco: '',
-      maxPreco: ''
-    }
-    setFilters(baseFilters)
+    const base = { finalidade: defaultFinalidade, tipo: '', localizacao: '', busca: '', minPreco: '', maxPreco: '' }
+    setFilters(base)
     router.replace(routeBase)
   }
 
+  const hasActiveFilters = !!(filters.tipo || filters.localizacao || filters.busca || filters.minPreco || filters.maxPreco)
+
   return (
-    <main className="flex-1 bg-[#020b18] text-slate-100">
-      <div className="absolute inset-x-0 top-0 h-[520px] bg-luxury-gradient opacity-80 -z-10"></div>
-      <div className="max-w-7xl mx-auto px-6 md:px-10 pt-32 pb-24">
+    <main className="flex-1 bg-[#020b18] text-slate-100 min-h-screen">
 
-        <div className="flex flex-col gap-5 md:gap-8">
-          <div className="rounded-[36px] border border-slate-700/60 bg-[#04122b]/50 backdrop-blur-2xl p-8 md:p-10 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <span className="text-[10px] uppercase tracking-[0.35em] text-gold">{pageSubtitle}</span>
-                <h1 className="mt-4 text-4xl md:text-5xl font-serif text-white leading-tight">{pageTitle}</h1>
-                <p className="mt-4 text-slate-300 max-w-2xl leading-relaxed">Navegue pelos imóveis mais desejados do mercado, com filtros inteligentes para encontrar a casa ideal para comprar ou alugar.</p>
-              </div>
+      {/* ── HERO BANNER ── */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-luxury-gradient opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020b18]" />
 
-              <div className="flex flex-wrap gap-3">
-                <Link href="/imoveis/venda" className={`px-6 py-3 rounded-full text-xs font-semibold tracking-widest uppercase transition ${activeSlug === 'venda' ? 'bg-gold text-[#04122b]' : 'border border-slate-700 text-slate-300 hover:border-gold hover:text-gold'}`}>
-                  Imóveis à Venda
-                </Link>
-                <Link href="/imoveis/aluguel" className={`px-6 py-3 rounded-full text-xs font-semibold tracking-widest uppercase transition ${activeSlug === 'aluguel' ? 'bg-gold text-[#04122b]' : 'border border-slate-700 text-slate-300 hover:border-gold hover:text-gold'}`}>
-                  Imóveis para Alugar
-                </Link>
-              </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 pt-36 pb-16">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="w-8 h-px bg-gold block" />
+              <span className="text-[10px] text-gold uppercase tracking-[0.3em]">{pageSubtitle}</span>
             </div>
+            <h1 className="font-serif text-5xl md:text-6xl text-white leading-tight mb-4">
+              {pageTitle}
+            </h1>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
+              Explore nossa seleção exclusiva com filtros inteligentes para encontrar o imóvel ideal.
+            </p>
           </div>
+        </div>
+      </div>
 
-          <section className="rounded-[32px] border border-slate-700/60 bg-[#020b18]/90 p-6 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-gold mb-2">Busca inteligente</p>
-                <h2 className="text-2xl font-serif text-white">Encontre o imóvel ideal</h2>
-              </div>
-              <button type="button" onClick={handleReset} className="inline-flex items-center justify-center rounded-full border border-slate-700 px-4 py-3 text-xs uppercase tracking-[0.35em] text-slate-300 hover:border-gold hover:text-gold transition">
-                Limpar filtros
-              </button>
+      {/* ── BARRA DE BUSCA COMPACTA ── */}
+      <div className="sticky top-0 z-30 bg-[#020b18]/95 backdrop-blur-xl border-b border-slate-800/60">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-4">
+          <form onSubmit={handleSubmit} className="flex items-center gap-3">
+
+            {/* Campo de busca principal */}
+            <div className="flex-1 relative">
+              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <input
+                type="text"
+                value={filters.busca}
+                onChange={e => setFilters({ ...filters, busca: e.target.value })}
+                placeholder="Buscar por título, bairro ou cidade..."
+                className="w-full bg-[#04122b]/80 border border-slate-700/60 text-white text-sm pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600 transition-colors"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-[1.8fr_1fr]">
-              <div className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {defaultFinalidade === '' && (
-                    <select
-                      value={filters.finalidade}
-                      onChange={(e) => setFilters({ ...filters, finalidade: e.target.value })}
-                      className="w-full bg-[#020b18]/70 border border-slate-700 text-slate-200 text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold appearance-none"
-                    >
-                      <option value="">Finalidade</option>
-                      <option value="Venda">Venda</option>
-                      <option value="Locação">Locação</option>
-                      <option value="Locacao">Locação</option>
-                    </select>
+            {/* Botão filtros avançados */}
+            <button
+              type="button"
+              onClick={() => setShowFilters(v => !v)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                showFilters || hasActiveFilters
+                  ? 'bg-gold text-[#04122b] border-gold'
+                  : 'border-slate-700/60 text-slate-400 hover:border-gold/40 hover:text-gold'
+              }`}
+            >
+              <SlidersHorizontal size={14} />
+              Filtros
+              {hasActiveFilters && (
+                <span className="bg-[#04122b] text-gold rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-black">
+                  {[filters.tipo, filters.localizacao, filters.minPreco, filters.maxPreco].filter(Boolean).length}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="submit"
+              className="bg-gold text-[#04122b] px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gold-light transition-colors"
+            >
+              Buscar
+            </button>
+          </form>
+
+          {/* Painel de filtros expansível */}
+          {showFilters && (
+            <div className="mt-3 pt-3 border-t border-slate-800/60">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <input
+                  type="text"
+                  value={filters.localizacao}
+                  onChange={e => setFilters({ ...filters, localizacao: e.target.value })}
+                  placeholder="Cidade ou bairro"
+                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                />
+                <select
+                  value={filters.tipo}
+                  onChange={e => setFilters({ ...filters, tipo: e.target.value })}
+                  className="bg-[#04122b]/80 border border-slate-700/60 text-slate-300 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 appearance-none"
+                >
+                  <option value="">Tipo de imóvel</option>
+                  {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <input
+                  type="number"
+                  value={filters.minPreco}
+                  onChange={e => setFilters({ ...filters, minPreco: e.target.value })}
+                  placeholder="Preço mínimo"
+                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                />
+                <input
+                  type="number"
+                  value={filters.maxPreco}
+                  onChange={e => setFilters({ ...filters, maxPreco: e.target.value })}
+                  placeholder="Preço máximo"
+                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                />
+              </div>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors"
+                >
+                  <X size={12} /> Limpar filtros
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── RESULTADOS ── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10">
+
+        {/* Contador */}
+        <div className="flex items-center justify-between mb-8">
+          <p className="text-slate-500 text-sm">
+            {loading ? (
+              <span className="animate-pulse">Buscando imóveis...</span>
+            ) : (
+              <>
+                <span className="text-white font-semibold text-lg font-serif">{imoveis.length}</span>
+                <span className="ml-2">{imoveis.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}</span>
+              </>
+            )}
+          </p>
+
+          {/* Links de navegação entre venda/aluguel */}
+          <div className="hidden md:flex items-center gap-1 bg-[#04122b]/60 border border-slate-800 rounded-full px-2 py-1.5">
+            <Link
+              href="/imoveis/venda"
+              className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeSlug === 'venda'
+                  ? 'bg-gold text-[#04122b]'
+                  : 'text-slate-400 hover:text-gold'
+              }`}
+            >
+              Venda
+            </Link>
+            <Link
+              href="/imoveis/aluguel"
+              className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeSlug === 'aluguel'
+                  ? 'bg-gold text-[#04122b]'
+                  : 'text-slate-400 hover:text-gold'
+              }`}
+            >
+              Locação
+            </Link>
+          </div>
+        </div>
+
+        {/* Estados */}
+        {error && (
+          <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-8 text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && imoveis.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 rounded-full border border-slate-800 flex items-center justify-center mb-6">
+              <Search size={22} className="text-slate-600" />
+            </div>
+            <p className="text-white font-serif text-xl mb-2">Nenhum imóvel encontrado</p>
+            <p className="text-slate-500 text-sm max-w-xs">
+              Tente ajustar os filtros ou ampliar a busca para ver mais opções.
+            </p>
+            <button
+              onClick={handleReset}
+              className="mt-6 text-xs text-gold border border-gold/30 px-5 py-2.5 rounded-full hover:bg-gold/10 transition-colors uppercase tracking-wider font-bold"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        )}
+
+        {/* Grade de cards */}
+        {!loading && imoveis.length > 0 && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {imoveis.map((imovel, i) => (
+              <Link
+                key={imovel.id}
+                href={`/imovel/${imovel.id}`}
+                className="group flex flex-col rounded-2xl border border-slate-800/60 bg-[#04122b]/30 overflow-hidden hover:-translate-y-1 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_8px_40px_rgba(197,160,89,0.08)]"
+              >
+                {/* Imagem */}
+                <div className="relative h-52 bg-[#04122b] overflow-hidden">
+                  {imovel.imagem_url ? (
+                    <img
+                      src={imovel.imagem_url}
+                      alt={imovel.titulo}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs uppercase tracking-widest">
+                      Sem imagem
+                    </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#04122b] via-transparent to-transparent opacity-60" />
 
-                  <input
-                    type="text"
-                    value={filters.busca}
-                    onChange={(e) => setFilters({ ...filters, busca: e.target.value })}
-                    placeholder="Busca por título, bairro ou cidade"
-                    className="w-full bg-[#020b18]/70 border border-slate-700 text-white text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold"
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <input
-                    type="text"
-                    value={filters.localizacao}
-                    onChange={(e) => setFilters({ ...filters, localizacao: e.target.value })}
-                    placeholder="Localização"
-                    className="w-full bg-[#020b18]/70 border border-slate-700 text-white text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold"
-                  />
-                  <select
-                    value={filters.tipo}
-                    onChange={(e) => setFilters({ ...filters, tipo: e.target.value })}
-                    className="w-full bg-[#020b18]/70 border border-slate-700 text-slate-200 text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold appearance-none"
-                  >
-                    <option value="">Tipo de imóvel</option>
-                    {tipos.map((tipo) => (
-                      <option key={tipo} value={tipo}>{tipo}</option>
-                    ))}
-                  </select>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="number"
-                      value={filters.minPreco}
-                      onChange={(e) => setFilters({ ...filters, minPreco: e.target.value })}
-                      placeholder="Mínimo"
-                      className="w-full bg-[#020b18]/70 border border-slate-700 text-white text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold"
-                    />
-                    <input
-                      type="number"
-                      value={filters.maxPreco}
-                      onChange={(e) => setFilters({ ...filters, maxPreco: e.target.value })}
-                      placeholder="Máximo"
-                      className="w-full bg-[#020b18]/70 border border-slate-700 text-white text-sm px-4 py-4 rounded-2xl focus:outline-none focus:border-gold"
-                    />
+                  {/* Tag tipo */}
+                  <div className="absolute top-4 left-4 bg-[#020b18]/80 backdrop-blur-sm text-gold text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-gold/20">
+                    {imovel.tipo}
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col justify-between gap-4">
-                <div className="rounded-3xl border border-slate-700/50 bg-slate-950/50 p-5 text-slate-300 text-sm">
-                  <p className="font-semibold text-white mb-3">Filtros rápidos</p>
-                  <p className="leading-relaxed">Filtre por finalidade, tipo, localização e faixa de preço, sem sobrecarregar a página.</p>
-                </div>
-                <button type="submit" className="w-full bg-gold text-[#04122b] uppercase tracking-[0.35em] font-bold rounded-2xl px-6 py-4 hover:bg-gold-light transition">
-                  Buscar Imóveis
-                </button>
-              </div>
-            </form>
-          </section>
+                {/* Conteúdo */}
+                <div className="flex flex-col flex-1 p-5">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-xs mb-2">
+                    <MapPin size={11} className="text-gold flex-shrink-0" />
+                    <span className="truncate">{imovel.bairro ? `${imovel.bairro}, ` : ''}{imovel.cidade}</span>
+                  </div>
 
-          <section className="rounded-[32px] border border-slate-700/60 bg-[#020b18]/90 p-6 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-gold mb-2">Resultados</p>
-                <h2 className="text-3xl font-serif text-white">{loading ? 'Carregando imóveis...' : `${imoveis.length} resultados`}</h2>
-              </div>
-              <div className="text-slate-400 text-sm">Filtrando por {searchLabel.toLowerCase()}</div>
-            </div>
+                  <h3 className="font-serif text-lg text-white leading-snug mb-3 line-clamp-2 group-hover:text-gold transition-colors">
+                    {imovel.titulo}
+                  </h3>
 
-            {loading ? (
-              <div className="rounded-[28px] border border-slate-700/40 bg-[#020b18]/90 py-16 flex items-center justify-center">
-                <p className="uppercase text-slate-400 tracking-[0.35em] text-xs">Aguarde enquanto encontrarmos as melhores opções.</p>
-              </div>
-            ) : error ? (
-              <div className="rounded-[28px] border border-rose-500/30 bg-[#2b1010]/80 p-8 text-rose-200">
-                <p className="font-semibold">Erro</p>
-                <p className="mt-2 text-sm text-slate-300">{error}</p>
-              </div>
-            ) : imoveis.length === 0 ? (
-              <div className="rounded-[28px] border border-slate-700/40 bg-[#020b18]/90 py-16 flex flex-col items-center justify-center gap-4">
-                <p className="text-slate-400 uppercase tracking-[0.35em] text-xs">Sem resultados</p>
-                <p className="text-white text-lg max-w-xl text-center">Nenhum imóvel encontrado com os filtros atuais. Ajuste a pesquisa ou apague algum filtro para ver mais opções.</p>
-              </div>
-            ) : (
-              <div className="grid gap-6 lg:grid-cols-2">
-                {imoveis.map((imovel) => (
-                  <Link
-                    key={imovel.id}
-                    href={`/imovel/${imovel.id}`}
-                    className="group block overflow-hidden rounded-[24px] border border-slate-700/40 bg-slate-900/80 shadow-[0_24px_60px_rgba(0,0,0,0.25)] transition hover:-translate-y-1"
-                  >
-                    <div className="relative h-72 overflow-hidden bg-slate-950">
-                      {imovel.imagem_url ? (
-                        <img
-                          src={imovel.imagem_url}
-                          alt={imovel.titulo}
-                          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-slate-800 text-slate-500">Sem imagem disponível</div>
+                  {/* Atributos */}
+                  {(imovel.quartos > 0 || imovel.banheiros > 0 || imovel.vagas > 0 || imovel.area > 0) && (
+                    <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 mb-4 border-t border-slate-800/60 pt-3 mt-auto">
+                      {imovel.quartos > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Bed size={12} className="text-slate-600" />
+                          {imovel.quartos} {imovel.quartos === 1 ? 'quarto' : 'quartos'}
+                        </span>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#020b18] via-[#020b18]/50 to-transparent" />
-                      <span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#04122b]">
-                        {imovel.finalidade?.toString().toLowerCase().includes('loc') ? 'Aluguel' : 'Venda'}
-                      </span>
+                      {imovel.banheiros > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Bath size={12} className="text-slate-600" />
+                          {imovel.banheiros} {imovel.banheiros === 1 ? 'banheiro' : 'banheiros'}
+                        </span>
+                      )}
+                      {imovel.vagas > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Car size={12} className="text-slate-600" />
+                          {imovel.vagas} {imovel.vagas === 1 ? 'vaga' : 'vagas'}
+                        </span>
+                      )}
+                      {imovel.area > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Maximize size={12} className="text-slate-600" />
+                          {imovel.area} m²
+                        </span>
+                      )}
                     </div>
-                    <div className="p-6">
-                      <div className="flex items-center justify-between gap-4 mb-3">
-                        <span className="text-[10px] uppercase tracking-[0.35em] text-gold">{imovel.tipo}</span>
-                        <span className="text-sm text-slate-400">{imovel.cidade}</span>
-                      </div>
-                      <h3 className="font-serif text-2xl text-white leading-tight mb-3">{imovel.titulo}</h3>
-                      <p className="text-sm leading-relaxed text-slate-300 line-clamp-3 mb-5">{imovel.descricao || 'Descrição não disponível para este imóvel.'}</p>
-                      <div className="flex flex-wrap gap-3 text-slate-400 text-xs uppercase tracking-[0.3em]">
-                        {imovel.quartos > 0 && <span className="flex items-center gap-1"><Bed size={14} />{imovel.quartos} quartos</span>}
-                        {imovel.banheiros > 0 && <span className="flex items-center gap-1"><Bath size={14} />{imovel.banheiros} banheiros</span>}
-                        {imovel.vagas > 0 && <span className="flex items-center gap-1"><Car size={14} />{imovel.vagas} vagas</span>}
-                        {imovel.area > 0 && <span className="flex items-center gap-1"><Maximize size={14} />{imovel.area} m²</span>}
-                      </div>
-                      <div className="mt-6 flex items-center justify-between gap-4">
-                        <span className="font-serif text-2xl text-gold">{formatMoney(imovel.preco)}</span>
-                        <span className="text-xs text-slate-400 uppercase tracking-[0.35em]">Ver detalhes</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                  )}
+
+                  {/* Preço */}
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800/60">
+                    <span className="font-serif text-xl text-gold">{formatMoney(imovel.preco)}</span>
+                    <span className="text-[10px] text-slate-600 group-hover:text-gold transition-colors uppercase tracking-wider font-bold">
+                      Ver detalhes →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Skeleton loading */}
+        {loading && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-800/60 bg-[#04122b]/30 overflow-hidden animate-pulse">
+                <div className="h-52 bg-slate-800/40" />
+                <div className="p-5 space-y-3">
+                  <div className="h-3 bg-slate-800/60 rounded w-1/3" />
+                  <div className="h-5 bg-slate-800/60 rounded w-3/4" />
+                  <div className="h-4 bg-slate-800/60 rounded w-1/2" />
+                  <div className="h-6 bg-slate-800/60 rounded w-2/5 mt-4" />
+                </div>
               </div>
-            )}
-          </section>
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   )

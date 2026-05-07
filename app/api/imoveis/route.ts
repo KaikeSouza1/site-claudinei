@@ -7,7 +7,8 @@ const isSale = (value: string) => /vend/i.test(value)
 function sanitizeTerm(value: string) {
   return value
     .trim()
-    .replace(/[%_]/g, '')
+    .replace(/[%_,'"]/g, '')
+    .replace(/\s+/g, ' ')
 }
 
 export async function GET(req: Request) {
@@ -23,16 +24,11 @@ export async function GET(req: Request) {
     .from('imoveis')
     .select('*')
     .eq('ativo', true)
-    .or('status.is.null,status.eq.disponivel,status.eq.reservado')
+    .not('status', 'in', '(vendido,alugado)')
 
   if (finalidade) {
-    if (isSale(finalidade)) {
-      query = query.ilike('finalidade', '%vend%')
-    } else if (isRent(finalidade)) {
-      query = query.ilike('finalidade', '%loc%')
-    } else {
-      query = query.eq('finalidade', finalidade)
-    }
+    const finalidadeSanitizada = sanitizeTerm(finalidade)
+    query = query.ilike('finalidade', `%${finalidadeSanitizada}%`)
   }
 
   if (tipo) {
@@ -42,9 +38,8 @@ export async function GET(req: Request) {
   const searchText = sanitizeTerm([busca, localizacao].filter(Boolean).join(' '))
   if (searchText) {
     const encoded = `%${searchText}%`
-    query = query.or(
-      `titulo.ilike.${encoded},descricao.ilike.${encoded},endereco.ilike.${encoded},bairro.ilike.${encoded},cidade.ilike.${encoded}`
-    )
+    const searchColumns = ['titulo', 'descricao', 'endereco', 'bairro', 'cidade']
+    query = query.or(searchColumns.map(column => `${column}.ilike.${encoded}`).join(','))
   }
 
   if (!Number.isNaN(minPreco)) {
