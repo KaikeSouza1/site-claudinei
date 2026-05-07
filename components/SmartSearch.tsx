@@ -77,7 +77,7 @@ export default function SmartSearch() {
                 value={buscaLivre}
                 onChange={(e) => setBuscaLivre(e.target.value)}
                 placeholder="Ex: Casa com 3 quartos para alugar no Centro..." 
-                className="w-full bg-[#020b18]/60 border border-slate-600 text-white text-base px-12 py-5 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-500 font-light"
+                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white text-base px-12 py-5 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-400 font-light"
               />
             </div>
             <button type="submit" className="bg-gold text-[#04122b] px-10 py-5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-gold-light transition-all shadow-lg hover:shadow-gold/20 whitespace-nowrap">
@@ -103,7 +103,7 @@ export default function SmartSearch() {
               <select 
                 value={filtros.finalidade}
                 onChange={(e) => setFiltros({...filtros, finalidade: e.target.value})}
-                className="w-full bg-[#020b18]/60 border border-slate-600 text-slate-300 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
+                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
               >
                 <option value="">Finalidade</option>
                 <option value="Venda">Comprar</option>
@@ -117,7 +117,7 @@ export default function SmartSearch() {
               <select 
                 value={filtros.tipo}
                 onChange={(e) => setFiltros({...filtros, tipo: e.target.value})}
-                className="w-full bg-[#020b18]/60 border border-slate-600 text-slate-300 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
+                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold appearance-none cursor-pointer"
               >
                 <option value="">Tipo de Imóvel</option>
                 <option value="Casa">Casa</option>
@@ -135,7 +135,7 @@ export default function SmartSearch() {
                 value={filtros.localizacao}
                 onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
                 placeholder="Cidade ou Bairro" 
-                className="w-full bg-[#020b18]/60 border border-slate-600 text-white text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-500"
+                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm px-10 py-4 rounded-lg focus:outline-none focus:border-gold transition-colors placeholder:text-slate-400"
               />
             </div>
 

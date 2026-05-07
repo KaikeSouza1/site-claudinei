@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, MapPin, Bed, Bath, Car, Maximize,
-  Phone, Mail, Star, HomeIcon, ChevronLeft,
+  Star, HomeIcon, ChevronLeft,
   ChevronRight, X, Heart, Share2, Grid3x3
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -116,6 +116,7 @@ export default function ImovelPage() {
   const [f0, ...rest] = galeria;
   const side = rest.slice(0, 4);            // até 4 miniaturas
   const extra = galeria.length - 5;        // fotos além das 5 exibidas
+  const codigo = imovel.codigo || `IMV${String(imovel.id ?? '').substring(0, 6).toUpperCase()}`;
 
   return (
     <main style={{ background: C.bg, minHeight: '100vh', overflowX: 'hidden', paddingTop: 96 }}>
@@ -280,7 +281,7 @@ export default function ImovelPage() {
                   {/* Botões */}
                   <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 9, marginBottom: 20 }}>
                     <a
-                      href={`https://wa.me/5500000000000?text=${encodeURIComponent(`Olá! Tenho interesse no imóvel: ${imovel.titulo}`)}`}
+                      href={`https://wa.me/5542984156013?text=${encodeURIComponent(`Olá! Tenho interesse no imóvel: ${imovel.titulo}`)}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.card, padding: '13px 0', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, textDecoration: 'none', transition: 'background .2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = C.goldL; }}
@@ -292,24 +293,12 @@ export default function ImovelPage() {
                       WhatsApp
                     </a>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
-                      {[{ icon: <Phone size={13} />, label: 'Ligar' }, { icon: <Mail size={13} />, label: 'E-mail' }].map(btn => (
-                        <button key={btn.label}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, border: `1px solid ${C.bs}`, background: 'transparent', color: '#64748b', padding: '11px 0', fontSize: 10, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all .2s' }}
-                          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = C.gold; el.style.color = C.gold; }}
-                          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = C.bs; el.style.color = '#64748b'; }}
-                        >
-                          {btn.icon} {btn.label}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   {/* Código */}
                   <div style={{ background: C.bg, border: `1px solid rgba(148,163,184,0.07)`, padding: '13px 15px' }}>
                     {[
-                      { k: 'Código', v: imovel.codigo || `IMV${imovel.id.substring(0,6).toUpperCase()}`, mono: true },
-                      { k: 'Atualizado', v: 'Hoje', mono: false },
+                      { k: 'Código', v: codigo, mono: true },
                     ].map((row, i, arr) => (
                       <div key={row.k}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>

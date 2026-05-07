@@ -198,8 +198,8 @@ export default function EditarImovel() {
       <form onSubmit={handleAtualizar} className="space-y-8">
         
         {/* GALERIA UNIFICADA E DEFINIÇÃO DE CAPA */}
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
-          <div className="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
+          <div className="flex justify-between items-center mb-6 border-b border-slate-500/30 pb-4">
             <h2 className="text-sm font-bold text-white uppercase tracking-widest">Fotos do Imóvel (Capa e Galeria)</h2>
             <label className="cursor-pointer bg-gold text-[#04122b] px-6 py-2 rounded-lg text-xs font-bold uppercase hover:bg-gold-light transition-colors flex items-center gap-2">
               {uploadingGaleria ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
@@ -209,7 +209,7 @@ export default function EditarImovel() {
           </div>
           
           {galeria.length === 0 ? (
-            <div className="border-2 border-dashed border-slate-600 rounded-xl h-48 flex flex-col items-center justify-center text-slate-400 bg-[#020b18]/50">
+            <div className="border-2 border-dashed border-slate-500/40 rounded-xl h-48 flex flex-col items-center justify-center text-slate-400 bg-[#2f4968]/40">
               <UploadCloud size={32} className="mb-3 opacity-50" />
               <p className="text-sm">Nenhuma foto adicionada.</p>
               <p className="text-xs opacity-60">Selecione as fotos para aplicar marca d'água e subir pro Cloudflare R2.</p>
@@ -246,27 +246,27 @@ export default function EditarImovel() {
         </div>
 
         {/* DADOS PRINCIPAIS */}
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
-          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4">Informações Principais</h2>
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4">Informações Principais</h2>
           <div className="grid md:grid-cols-12 gap-6">
             <div className="md:col-span-2">
               <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Código</label>
-              <input type="text" name="codigo" value={formData.codigo} onChange={handleInputChange} placeholder="Ex: CA001" className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+              <input type="text" name="codigo" value={formData.codigo} onChange={handleInputChange} placeholder="Ex: CA001" className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
             </div>
             <div className="md:col-span-10">
               <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Título do Anúncio *</label>
-              <input required type="text" name="titulo" value={formData.titulo} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+              <input required type="text" name="titulo" value={formData.titulo} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
             </div>
             <div className="md:col-span-4">
               <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Finalidade</label>
-              <select name="finalidade" value={formData.finalidade} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-slate-300 px-4 py-3 rounded-lg focus:border-gold outline-none text-sm">
+              <select name="finalidade" value={formData.finalidade} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 px-4 py-3 rounded-lg focus:border-gold outline-none text-sm">
                 <option value="Venda">Venda</option>
                 <option value="Locação">Locação</option>
               </select>
             </div>
             <div className="md:col-span-4">
               <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Tipo de Imóvel</label>
-              <select name="tipo" value={formData.tipo} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-slate-300 px-4 py-3 rounded-lg focus:border-gold outline-none text-sm">
+              <select name="tipo" value={formData.tipo} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 px-4 py-3 rounded-lg focus:border-gold outline-none text-sm">
                 <option value="Casa">Casa</option>
                 <option value="Apartamento">Apartamento</option>
                 <option value="Terreno">Terreno</option>
@@ -276,63 +276,63 @@ export default function EditarImovel() {
             </div>
             <div className="md:col-span-4">
               <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Preço (R$) *</label>
-              <input required type="number" step="0.01" name="preco" value={formData.preco} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+              <input required type="number" step="0.01" name="preco" value={formData.preco} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
             </div>
           </div>
         </div>
 
         {/* LOCALIZAÇÃO E CARACTERÍSTICAS */}
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4 flex items-center gap-2"><MapPin size={16} className="text-gold"/> Localização</h2>
+          <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
+            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4 flex items-center gap-2"><MapPin size={16} className="text-gold"/> Localização</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Cidade *</label>
-                <input required type="text" name="cidade" value={formData.cidade} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input required type="text" name="cidade" value={formData.cidade} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Bairro</label>
-                <input type="text" name="bairro" value={formData.bairro} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="text" name="bairro" value={formData.bairro} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Endereço Completo</label>
-                <input type="text" name="endereco" value={formData.endereco} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="text" name="endereco" value={formData.endereco} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Latitude</label>
-                  <input type="text" name="latitude" value={formData.latitude} onChange={handleInputChange} placeholder="-26.230..." className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                  <input type="text" name="latitude" value={formData.latitude} onChange={handleInputChange} placeholder="-26.230..." className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
                 </div>
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Longitude</label>
-                  <input type="text" name="longitude" value={formData.longitude} onChange={handleInputChange} placeholder="-51.085..." className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                  <input type="text" name="longitude" value={formData.longitude} onChange={handleInputChange} placeholder="-51.085..." className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl flex flex-col">
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4">Características</h2>
+          <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl flex flex-col">
+            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4">Características</h2>
             <div className="grid grid-cols-2 gap-4 flex-1">
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Área (m²)</label>
-                <input type="number" name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="number" name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Quartos</label>
-                <input type="number" name="quartos" value={formData.quartos} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="number" name="quartos" value={formData.quartos} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Banheiros</label>
-                <input type="number" name="banheiros" value={formData.banheiros} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="number" name="banheiros" value={formData.banheiros} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-2">Vagas de Garagem</label>
-                <input type="number" name="vagas" value={formData.vagas} onChange={handleInputChange} className="w-full bg-[#020b18] border border-slate-700 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
+                <input type="number" name="vagas" value={formData.vagas} onChange={handleInputChange} className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:border-gold outline-none text-sm" />
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-700/50 flex gap-8">
+            <div className="mt-8 pt-6 border-t border-slate-500/30 flex gap-8">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="destaque" checked={formData.destaque} onChange={handleInputChange} className="w-5 h-5 accent-gold cursor-pointer" />
                 <span className="text-sm font-bold text-gold uppercase tracking-widest">Imóvel Destaque</span>
@@ -346,8 +346,8 @@ export default function EditarImovel() {
         </div>
 
         {/* CONTROLE DE STATUS */}
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
-          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4">Status do Imóvel</h2>
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4">Status do Imóvel</h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <label className="flex items-center gap-3 cursor-pointer">
@@ -413,9 +413,9 @@ export default function EditarImovel() {
         </div>
 
         {/* DESCRIÇÃO */}
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-8 rounded-xl shadow-xl">
-          <label className="block text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-700/50 pb-4">Descrição Completa</label>
-          <textarea name="descricao" rows={8} value={formData.descricao} onChange={handleInputChange} placeholder="Descreva os detalhes, diferenciais e acabamentos do imóvel..." className="w-full bg-[#020b18] border border-slate-700 text-white px-6 py-4 rounded-lg focus:border-gold outline-none resize-none text-sm"></textarea>
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
+          <label className="block text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4">Descrição Completa</label>
+          <textarea name="descricao" rows={8} value={formData.descricao} onChange={handleInputChange} placeholder="Descreva os detalhes, diferenciais e acabamentos do imóvel..." className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white px-6 py-4 rounded-lg focus:border-gold outline-none resize-none text-sm"></textarea>
         </div>
 
         {/* AÇÕES FINAIS */}

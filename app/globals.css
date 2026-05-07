@@ -11,7 +11,7 @@
   --color-gold-dark: #a38243;
 
   /* Nosso degradê de fundo */
-  --background-image-luxury-gradient: linear-gradient(to bottom, #04122b, #1a304d, #7c8f9e);
+  --background-image-luxury-gradient: linear-gradient(to bottom, #273648, #3f5877, #5d7a9e, #8aa6c4, #b8cff1);
 }
 
 /* Opcional: Se quiser que o fundo do body já pegue um azul escuro por padrão caso o degradê não carregue */

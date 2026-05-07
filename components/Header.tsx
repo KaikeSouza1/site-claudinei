@@ -12,14 +12,20 @@ export default function Header() {
         
         <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">
           <Link href="/" className="hover:text-gold transition-colors">Início</Link>
-          <Link href="/imoveis/aluguel" className="hover:text-gold transition-colors">Locação</Link>
           <Link href="/imoveis/venda" className="hover:text-gold transition-colors">Venda</Link>
+          <Link href="/imoveis/aluguel" className="hover:text-gold transition-colors">Locação</Link>
+          <a href="#avaliacao" className="hover:text-gold transition-colors">Avaliação</a>
           <Link href="#contato" className="hover:text-gold transition-colors">Contato</Link>
         </nav>
 
-        <button className="border border-gold text-gold hover:bg-gold hover:text-[#04122b] transition-all px-6 py-2 text-xs tracking-widest uppercase">
+        <a
+          href="https://wa.me/5542984156013"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border border-gold text-gold hover:bg-gold hover:text-[#04122b] transition-all px-6 py-2 text-xs tracking-widest uppercase"
+        >
           Whatsapp
-        </button>
+        </a>
       </div>
     </header>
   );

@@ -2,15 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Bed, Bath, Car, Maximize, ChevronRight } from 'lucide-react';
+import { MapPin, Bed, Bath, Car, Maximize, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import SmartSearch from '@/components/SmartSearch';
+import AreasAtuacao from '@/components/AreasAtuacao';
+import AvaliacaoImobiliaria from '@/components/AvaliacaoImobiliaria';
+import NumerosExpertise from '@/components/NumerosExpertise';
 import Link from 'next/link';
 
 export default function Home() {
   const [abaAtiva, setAbaAtiva] = useState('Venda');
   const [imoveisDestaque, setImoveisDestaque] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchDestaques() {
@@ -22,10 +28,10 @@ export default function Home() {
         .eq('destaque', true)
         .or('status.is.null,status.eq.disponivel,status.eq.reservado')
         .ilike('finalidade', abaAtiva === 'Venda' ? '%vend%' : '%loc%')
-        .limit(20);
+        .limit(50);
 
       if (data && !error) {
-        const embaralhado = data.sort(() => 0.5 - Math.random()).slice(0, 3);
+        const embaralhado = data.sort(() => 0.5 - Math.random()).slice(0, 7);
         setImoveisDestaque(embaralhado);
       } else {
         setImoveisDestaque([]);
@@ -36,6 +42,19 @@ export default function Home() {
     fetchDestaques();
   }, [abaAtiva]);
 
+  // Autoplay do carrossel
+  useEffect(() => {
+    if (imoveisDestaque.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) =>
+        prevIndex + 1 >= imoveisDestaque.length ? 0 : prevIndex + 1
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [imoveisDestaque.length]);
+
   const formatarPreco = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
   };
@@ -43,10 +62,51 @@ export default function Home() {
   const linkVerTodos = abaAtiva === 'Venda' ? '/imoveis/venda' : '/imoveis/aluguel';
   const labelVerTodos = abaAtiva === 'Venda' ? 'Ver todos à venda' : 'Ver todos para alugar';
 
+  // Funções do carrossel
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex + 1 >= imoveisDestaque.length ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex - 1 < 0 ? imoveisDestaque.length - 1 : prevIndex - 1
+    );
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  // Funções para swipe no mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    }
+    if (isRightSwipe) {
+      prevSlide();
+    }
+  };
+
   return (
-    <main className="flex-1 bg-[#020b18] flex flex-col relative overflow-hidden">
+    <main className="flex-1 bg-[#223a51] flex flex-col relative overflow-hidden text-slate-100">
       {/* Gradiente de fundo */}
-      <div className="absolute top-0 w-full h-[800px] bg-luxury-gradient z-0 pointer-events-none" />
+      <div className="absolute top-0 w-full h-[800px] bg-luxury-gradient z-0 pointer-events-none opacity-95" />
 
       {/* ═══════════════════════════════════
           HERO
@@ -66,15 +126,16 @@ export default function Home() {
               CRECI 37016 · CNAI 45505
             </div>
 
-            <h1 className="font-serif text-5xl md:text-6xl xl:text-7xl leading-tight text-white">
-              O imóvel <br />
-              dos seus <br />
-              <span className="text-gold italic">sonhos</span> existe.
+            <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
+              Negociação, Avaliação e Gestão de <br />
+              <span className="text-gold italic">Patrimônios Imobiliários</span> <br />
+              Urbanos e Rurais
             </h1>
 
             <p className="max-w-md text-slate-300 text-sm md:text-base leading-relaxed">
-              Corretor e Avaliador Imobiliário certificado com mais de 10 anos de experiência.
-              Especialista em imóveis de alto padrão com atendimento personalizado.
+              Especialistas em imóveis urbanos, rurais, ativos florestais e avaliação técnica profissional.
+              Mais de 10 anos transformando patrimônio em resultado com expertise em negociação, 
+              avaliação mercadológica e gestão estratégica.
             </p>
 
 
@@ -130,17 +191,33 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════
+          ÁREAS DE ATUAÇÃO
+      ═══════════════════════════════════ */}
+      <AreasAtuacao />
+
+      {/* ═══════════════════════════════════
+          AVALIAÇÃO IMOBILIÁRIA
+      ═══════════════════════════════════ */}
+      <section id="avaliacao">
+        <AvaliacaoImobiliaria />
+      </section>
+
+      {/* ═══════════════════════════════════
+          NÚMEROS E EXPERTISE
+      ═══════════════════════════════════ */}
+      <NumerosExpertise />
+
+      {/* ═══════════════════════════════════
           DESTAQUES
       ═══════════════════════════════════ */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-10 py-20">
+      <section className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-10 py-20 bg-[#173a57]/80 backdrop-blur-xl rounded-[32px] border border-slate-500/20 shadow-[0_40px_120px_rgba(15,23,42,0.18)]">
 
         {/* Cabeçalho da seção */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <p className="text-[10px] text-gold tracking-widest uppercase mb-3">Portfólio Exclusivo</p>
+            <p className="text-[10px] text-gold tracking-widest uppercase mb-3">Oportunidades Estratégicas</p>
             <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-              Imóveis em{' '}
-              <span className="text-gold italic">destaque</span>
+              Portfólio de <span className="text-gold italic">Investimentos</span>
             </h2>
           </div>
 
@@ -172,7 +249,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Grade de imóveis */}
+        {/* Carrossel de imóveis em destaque */}
         <AnimatePresence mode="wait">
           {carregando ? (
             <motion.div
@@ -180,7 +257,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex justify-center items-center h-72 rounded-[28px] border border-slate-700/50 bg-[#020b18]/80 text-slate-500 text-sm tracking-widest uppercase"
+              className="flex justify-center items-center h-72 rounded-[28px] border border-slate-500/40 bg-[#2f5a83]/70 text-slate-100 text-sm tracking-widest uppercase"
             >
               Carregando imóveis...
             </motion.div>
@@ -190,7 +267,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="rounded-[28px] border border-slate-700/50 bg-[#020b18]/80 p-16 text-center text-slate-500"
+              className="rounded-[28px] border border-slate-500/40 bg-[#2f5a83]/70 p-16 text-center text-slate-100"
             >
               Nenhum imóvel em destaque para {abaAtiva.toLowerCase()}.
             </motion.div>
@@ -201,123 +278,122 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4 }}
-              className="grid gap-4 lg:grid-cols-12"
+              className="relative"
             >
-              {/* Card principal — grande */}
-              {imoveisDestaque[0] && (
-                <Link
-                  href={`/imovel/${imoveisDestaque[0].id}`}
-                  className="lg:col-span-7 relative group overflow-hidden rounded-[24px] bg-slate-900 border border-slate-700/50 transition-transform duration-300 hover:-translate-y-1"
-                  style={{ minHeight: '420px' }}
+              {/* Container do carrossel */}
+              <div
+                className="relative overflow-hidden rounded-[28px]"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <motion.div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                 >
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                    style={{ backgroundImage: `url(${imoveisDestaque[0].imagem_url || ''})` }}
-                  />
-                  {!imoveisDestaque[0].imagem_url && (
-                    <div className="absolute inset-0 bg-[#1a304d] flex items-center justify-center text-slate-500 text-sm">
-                      Sem imagem
+                  {imoveisDestaque.map((item, index) => (
+                    <div key={item.id} className="w-full flex-shrink-0 px-2">
+                      <Link
+                        href={`/imovel/${item.id}`}
+                        className="relative group overflow-hidden rounded-[24px] bg-[#5a7ca5] border border-slate-300/30 shadow-[0_30px_90px_rgba(19,36,62,0.18)] transition-transform duration-300 hover:-translate-y-1 block"
+                        style={{ minHeight: '500px' }}
+                      >
+                        <div
+                          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                          style={{ backgroundImage: `url(${item.imagem_url || ''})` }}
+                        />
+                        {!item.imagem_url && (
+                          <div className="absolute inset-0 bg-[#2f4d6e] flex items-center justify-center text-slate-200 text-sm">
+                            Sem imagem
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#3f6f92] via-[#8ca7d0]/25 to-transparent" />
+
+                        {/* Badge destaque */}
+                        <div className="absolute top-5 left-5 bg-gradient-to-r from-[#2b5f86] via-[#4e7fab] to-[#8ba7cb] text-[#04122b] px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_10px_40px_rgba(29,60,96,0.18)]">
+                          Destaque
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 w-full p-7">
+                          <p className="text-[10px] text-gold tracking-widest uppercase mb-2">
+                            {item.tipo}
+                          </p>
+                          <h3 className="font-serif text-2xl md:text-3xl text-white mb-2 group-hover:text-gold transition-colors line-clamp-2">
+                            {item.titulo}
+                          </h3>
+                          <p className="font-serif text-xl text-gold mb-4">
+                            {formatarPreco(item.preco)}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
+                            <span className="flex items-center gap-1.5">
+                              <MapPin size={13} className="text-gold" />
+                              {item.cidade}
+                            </span>
+                            {item.quartos > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                <Bed size={13} className="text-slate-400" />
+                                {item.quartos} {item.quartos === 1 ? 'quarto' : 'quartos'}
+                              </span>
+                            )}
+                            {item.banheiros > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                <Bath size={13} className="text-slate-400" />
+                                {item.banheiros} {item.banheiros === 1 ? 'banheiro' : 'banheiros'}
+                              </span>
+                            )}
+                            {item.vagas > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                <Car size={13} className="text-slate-400" />
+                                {item.vagas} {item.vagas === 1 ? 'vaga' : 'vagas'}
+                              </span>
+                            )}
+                            {item.area > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                <Maximize size={13} className="text-slate-400" />
+                                {item.area} m²
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#020b18] via-[#020b18]/50 to-transparent" />
-
-                  {/* Badge destaque */}
-                  <div className="absolute top-5 left-5 bg-gold text-[#04122b] px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
-                    Destaque
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 w-full p-7">
-                    <p className="text-[10px] text-gold tracking-widest uppercase mb-2">
-                      {imoveisDestaque[0].tipo}
-                    </p>
-                    <h3 className="font-serif text-2xl md:text-3xl text-white mb-2 group-hover:text-gold transition-colors line-clamp-2">
-                      {imoveisDestaque[0].titulo}
-                    </h3>
-                    <p className="font-serif text-xl text-gold mb-4">
-                      {formatarPreco(imoveisDestaque[0].preco)}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
-                      <span className="flex items-center gap-1.5">
-                        <MapPin size={13} className="text-gold" />
-                        {imoveisDestaque[0].cidade}
-                      </span>
-                      {imoveisDestaque[0].quartos > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <Bed size={13} className="text-slate-400" />
-                          {imoveisDestaque[0].quartos} qts
-                        </span>
-                      )}
-                      {imoveisDestaque[0].banheiros > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <Bath size={13} className="text-slate-400" />
-                          {imoveisDestaque[0].banheiros} wcs
-                        </span>
-                      )}
-                      {imoveisDestaque[0].vagas > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <Car size={13} className="text-slate-400" />
-                          {imoveisDestaque[0].vagas} vgs
-                        </span>
-                      )}
-                      {imoveisDestaque[0].area > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <Maximize size={13} className="text-slate-400" />
-                          {imoveisDestaque[0].area}m²
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              )}
-
-              {/* Cards menores */}
-              <div className="lg:col-span-5 flex flex-col gap-4">
-                {imoveisDestaque.slice(1).map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/imovel/${item.id}`}
-                    className="group relative overflow-hidden rounded-[24px] bg-slate-900 border border-slate-700/50 transition-transform duration-300 hover:-translate-y-1 flex-1"
-                    style={{ minHeight: '192px' }}
-                  >
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                      style={{ backgroundImage: `url(${item.imagem_url || ''})` }}
-                    />
-                    {!item.imagem_url && (
-                      <div className="absolute inset-0 bg-[#152741] flex items-center justify-center text-slate-500 text-sm">
-                        Sem imagem
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020b18] via-[#020b18]/50 to-transparent" />
-
-                    <div className="absolute bottom-0 left-0 w-full p-5">
-                      <p className="text-[9px] text-gold tracking-widest uppercase mb-1">{item.tipo}</p>
-                      <h3 className="font-serif text-lg text-white mb-1 group-hover:text-gold transition-colors truncate">
-                        {item.titulo}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <p className="font-serif text-lg text-gold">{formatarPreco(item.preco)}</p>
-                        <span className="flex items-center gap-1 text-slate-400 text-xs">
-                          <MapPin size={11} className="text-gold" />
-                          {item.cidade}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-
-                {/* Botão ver todos — dentro da grade quando há apenas 1 card lateral */}
-                {imoveisDestaque.slice(1).length < 2 && (
-                  <Link
-                    href={linkVerTodos}
-                    className="flex items-center justify-center gap-3 rounded-[24px] border border-gold/30 bg-gold/5 hover:bg-gold/10 text-gold transition-all px-6 py-8 group flex-1"
-                    style={{ minHeight: '100px' }}
-                  >
-                    <span className="text-xs font-bold uppercase tracking-widest">{labelVerTodos}</span>
-                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                )}
+                  ))}
+                </motion.div>
               </div>
+
+              {/* Controles de navegação */}
+              {imoveisDestaque.length > 1 && (
+                <>
+                  {/* Botões anterior/próximo */}
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#04122b]/80 hover:bg-[#04122b] border border-slate-500/30 text-slate-300 hover:text-gold transition-all p-3 rounded-full shadow-lg backdrop-blur-sm z-10"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#04122b]/80 hover:bg-[#04122b] border border-slate-500/30 text-slate-300 hover:text-gold transition-all p-3 rounded-full shadow-lg backdrop-blur-sm z-10"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+
+                  {/* Indicadores */}
+                  <div className="flex justify-center gap-2 mt-6">
+                    {imoveisDestaque.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => goToSlide(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentIndex
+                            ? 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.5)]'
+                            : 'bg-slate-500/50 hover:bg-slate-400/70'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

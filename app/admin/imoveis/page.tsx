@@ -70,7 +70,7 @@ export default function AdminImoveisList() {
         <div className="flex gap-4">
           <button 
             onClick={() => setMostrarInativos(!mostrarInativos)}
-            className="bg-slate-700 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-slate-600 transition-colors"
+            className="bg-[#2f4968] text-white px-6 py-3 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-[#223a51] transition-colors border border-slate-500/30"
           >
             {mostrarInativos ? 'Mostrar Ativos' : 'Mostrar Inativos'}
           </button>
@@ -83,10 +83,10 @@ export default function AdminImoveisList() {
         </div>
       </div>
 
-      <div className="bg-[#1a304d]/50 border border-slate-700/50 rounded-xl overflow-hidden shadow-xl">
+      <div className="bg-[#2f4968]/60 border border-slate-500/30 rounded-xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-[#04122b] text-xs uppercase tracking-widest text-gold font-bold">
+            <thead className="bg-[#223a51] text-xs uppercase tracking-widest text-gold font-bold">
               <tr>
                 <th className="px-6 py-4">Foto / Título</th>
                 <th className="px-6 py-4">Finalidade</th>
@@ -96,16 +96,16 @@ export default function AdminImoveisList() {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className="divide-y divide-slate-500/20">
               {carregando ? (
                 <tr><td colSpan={mostrarInativos ? 6 : 5} className="px-6 py-8 text-center text-slate-500 animate-pulse">Carregando imóveis...</td></tr>
               ) : imoveis.length === 0 ? (
                 <tr><td colSpan={mostrarInativos ? 6 : 5} className="px-6 py-8 text-center text-slate-500">Nenhum imóvel {mostrarInativos ? 'inativo' : 'ativo'} cadastrado.</td></tr>
               ) : (
                 imoveis.map((imovel) => (
-                  <tr key={imovel.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={imovel.id} className="hover:bg-[#2f4968]/30 transition-colors">
                     <td className="px-6 py-4 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded bg-slate-800 flex-shrink-0 overflow-hidden relative border border-slate-700">
+                      <div className="w-12 h-12 rounded bg-[#2f4968] flex-shrink-0 overflow-hidden relative border border-slate-500/30">
                         {imovel.imagem_url ? (
                           <img src={imovel.imagem_url} alt={imovel.titulo} className="w-full h-full object-cover" />
                         ) : (
@@ -118,7 +118,7 @@ export default function AdminImoveisList() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="bg-slate-800 text-slate-300 px-2 py-1 rounded text-[10px] uppercase tracking-wider">
+                      <span className="bg-[#223a51] text-slate-300 px-2 py-1 rounded text-[10px] uppercase tracking-wider border border-slate-500/30">
                         {imovel.finalidade}
                       </span>
                     </td>

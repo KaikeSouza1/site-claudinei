@@ -128,10 +128,10 @@ export default function ImoveisCatalog({
   const hasActiveFilters = !!(filters.tipo || filters.localizacao || filters.busca || filters.minPreco || filters.maxPreco)
 
   return (
-    <main className="flex-1 bg-[#020b18] text-slate-100 min-h-screen">
+    <main className="flex-1 bg-[#223a51] flex flex-col relative overflow-hidden text-slate-100 min-h-screen">
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-luxury-gradient opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020b18]" />
+        <div className="absolute inset-0 bg-luxury-gradient opacity-95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#223a51]" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 pt-36 pb-16">
           <div className="max-w-2xl">
@@ -142,24 +142,24 @@ export default function ImoveisCatalog({
             <h1 className="font-serif text-5xl md:text-6xl text-white leading-tight mb-4">
               {pageTitle}
             </h1>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
-              Explore nossa seleção exclusiva com filtros inteligentes para encontrar o imóvel ideal.
+            <p className="text-slate-300 text-sm leading-relaxed max-w-lg">
+              Explore nossa seleção exclusiva para encontrar o imóvel ideal.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 bg-[#020b18]/95 backdrop-blur-xl border-b border-slate-800/60">
+      <div className="sticky top-0 z-30 bg-[#223a51]/95 backdrop-blur-xl border-b border-slate-500/20">
         <div className="max-w-7xl mx-auto px-6 md:px-10 py-4">
           <form onSubmit={handleSubmit} className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={filters.busca}
                 onChange={e => setFilters({ ...filters, busca: e.target.value })}
                 placeholder="Buscar por título, bairro ou cidade..."
-                className="w-full bg-[#04122b]/80 border border-slate-700/60 text-white text-sm pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600 transition-colors"
+                className="w-full bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-500 transition-colors"
               />
             </div>
 
@@ -169,7 +169,7 @@ export default function ImoveisCatalog({
               className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
                 showFilters || hasActiveFilters
                   ? 'bg-gold text-[#04122b] border-gold'
-                  : 'border-slate-700/60 text-slate-400 hover:border-gold/40 hover:text-gold'
+                  : 'border-slate-500/40 text-slate-300 hover:border-gold/40 hover:text-gold'
               }`}
             >
               <SlidersHorizontal size={14} />
@@ -190,19 +190,19 @@ export default function ImoveisCatalog({
           </form>
 
           {showFilters && (
-            <div className="mt-3 pt-3 border-t border-slate-800/60">
+            <div className="mt-3 pt-3 border-t border-slate-500/20">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <input
                   type="text"
                   value={filters.localizacao}
                   onChange={e => setFilters({ ...filters, localizacao: e.target.value })}
                   placeholder="Cidade ou bairro"
-                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                  className="bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-500"
                 />
                 <select
                   value={filters.tipo}
                   onChange={e => setFilters({ ...filters, tipo: e.target.value })}
-                  className="bg-[#04122b]/80 border border-slate-700/60 text-slate-300 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 appearance-none"
+                  className="bg-[#2f4968]/80 border border-slate-500/40 text-slate-200 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 appearance-none"
                 >
                   <option value="">Tipo de imóvel</option>
                   {tipos.map(t => <option key={t} value={t}>{t}</option>)}
@@ -212,21 +212,21 @@ export default function ImoveisCatalog({
                   value={filters.minPreco}
                   onChange={e => setFilters({ ...filters, minPreco: e.target.value })}
                   placeholder="Preço mínimo"
-                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                  className="bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-500"
                 />
                 <input
                   type="number"
                   value={filters.maxPreco}
                   onChange={e => setFilters({ ...filters, maxPreco: e.target.value })}
                   placeholder="Preço máximo"
-                  className="bg-[#04122b]/80 border border-slate-700/60 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-600"
+                  className="bg-[#2f4968]/80 border border-slate-500/40 text-white text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-gold/60 placeholder:text-slate-500"
                 />
               </div>
               {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors"
+                  className="mt-3 flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-400 transition-colors"
                 >
                   <X size={12} /> Limpar filtros
                 </button>
@@ -249,13 +249,13 @@ export default function ImoveisCatalog({
             )}
           </div>
 
-          <div className="hidden md:flex items-center gap-1 bg-[#04122b]/60 border border-slate-800 rounded-full px-2 py-1.5">
+          <div className="hidden md:flex items-center gap-1 bg-[#2f4968]/60 border border-slate-500/30 rounded-full px-2 py-1.5">
             <Link
               href="/imoveis/venda"
               className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
                 activeSlug === 'venda'
                   ? 'bg-gold text-[#04122b]'
-                  : 'text-slate-400 hover:text-gold'
+                  : 'text-slate-300 hover:text-gold'
               }`}
             >
               Venda
@@ -265,7 +265,7 @@ export default function ImoveisCatalog({
               className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
                 activeSlug === 'aluguel'
                   ? 'bg-gold text-[#04122b]'
-                  : 'text-slate-400 hover:text-gold'
+                  : 'text-slate-300 hover:text-gold'
               }`}
             >
               Locação
@@ -281,11 +281,11 @@ export default function ImoveisCatalog({
 
         {!loading && !error && imoveis.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-full border border-slate-800 flex items-center justify-center mb-6">
-              <Search size={22} className="text-slate-600" />
+            <div className="w-16 h-16 rounded-full border border-slate-500/30 bg-[#2f4968]/40 flex items-center justify-center mb-6">
+              <Search size={22} className="text-slate-500" />
             </div>
             <p className="text-white font-serif text-xl mb-2">Nenhum imóvel encontrado</p>
-            <p className="text-slate-500 text-sm max-w-xs">
+            <p className="text-slate-400 text-sm max-w-xs">
               Tente ajustar os filtros ou ampliar a busca para ver mais opções.
             </p>
             <button
@@ -303,9 +303,9 @@ export default function ImoveisCatalog({
               <Link
                 key={imovel.id}
                 href={`/imovel/${imovel.id}`}
-                className="group flex flex-col rounded-2xl border border-slate-800/60 bg-[#04122b]/30 overflow-hidden hover:-translate-y-1 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_8px_40px_rgba(197,160,89,0.08)]"
+                className="group flex flex-col rounded-2xl border border-slate-500/30 bg-[#2f4968]/40 overflow-hidden hover:-translate-y-1 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_8px_40px_rgba(197,160,89,0.08)]"
               >
-                <div className="relative h-52 bg-[#04122b] overflow-hidden">
+                <div className="relative h-52 bg-[#2f4968] overflow-hidden">
                   {imovel.imagem_url ? (
                     <img
                       src={imovel.imagem_url}
@@ -313,18 +313,18 @@ export default function ImoveisCatalog({
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs uppercase tracking-widest">
+                    <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs uppercase tracking-widest">
                       Sem imagem
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#04122b] via-transparent to-transparent opacity-60" />
-                  <div className="absolute top-4 left-4 bg-[#020b18]/80 backdrop-blur-sm text-gold text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-gold/20">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2f4968] via-transparent to-transparent opacity-60" />
+                  <div className="absolute top-4 left-4 bg-[#223a51]/80 backdrop-blur-sm text-gold text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-gold/20">
                     {imovel.tipo}
                   </div>
                 </div>
 
                 <div className="flex flex-col flex-1 p-5">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-xs mb-2">
+                  <div className="flex items-center gap-1.5 text-slate-400 text-xs mb-2">
                     <MapPin size={11} className="text-gold flex-shrink-0" />
                     <span className="truncate">{imovel.bairro ? `${imovel.bairro}, ` : ''}{imovel.cidade}</span>
                   </div>
@@ -334,37 +334,37 @@ export default function ImoveisCatalog({
                   </h3>
 
                   {(imovel.quartos > 0 || imovel.banheiros > 0 || imovel.vagas > 0 || imovel.area > 0) && (
-                    <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 mb-4 border-t border-slate-800/60 pt-3 mt-auto">
+                    <div className="flex flex-wrap gap-3 text-[11px] text-slate-400 mb-4 border-t border-slate-500/20 pt-3 mt-auto">
                       {imovel.quartos > 0 && (
                         <span className="flex items-center gap-1">
-                          <Bed size={12} className="text-slate-600" />
+                          <Bed size={12} className="text-slate-500" />
                           {imovel.quartos} {imovel.quartos === 1 ? 'quarto' : 'quartos'}
                         </span>
                       )}
                       {imovel.banheiros > 0 && (
                         <span className="flex items-center gap-1">
-                          <Bath size={12} className="text-slate-600" />
+                          <Bath size={12} className="text-slate-500" />
                           {imovel.banheiros} {imovel.banheiros === 1 ? 'banheiro' : 'banheiros'}
                         </span>
                       )}
                       {imovel.vagas > 0 && (
                         <span className="flex items-center gap-1">
-                          <Car size={12} className="text-slate-600" />
+                          <Car size={12} className="text-slate-500" />
                           {imovel.vagas} {imovel.vagas === 1 ? 'vaga' : 'vagas'}
                         </span>
                       )}
                       {imovel.area > 0 && (
                         <span className="flex items-center gap-1">
-                          <Maximize size={12} className="text-slate-600" />
+                          <Maximize size={12} className="text-slate-500" />
                           {imovel.area} m²
                         </span>
                       )}
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800/60">
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-500/20">
                     <span className="font-serif text-xl text-gold">{formatMoney(imovel.preco)}</span>
-                    <span className="text-[10px] text-slate-600 group-hover:text-gold transition-colors uppercase tracking-wider font-bold">
+                    <span className="text-[10px] text-slate-500 group-hover:text-gold transition-colors uppercase tracking-wider font-bold">
                       Ver detalhes →
                     </span>
                   </div>
@@ -377,13 +377,13 @@ export default function ImoveisCatalog({
         {loading && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-800/60 bg-[#04122b]/30 overflow-hidden animate-pulse">
-                <div className="h-52 bg-slate-800/40" />
+              <div key={i} className="rounded-2xl border border-slate-500/30 bg-[#2f4968]/40 overflow-hidden animate-pulse">
+                <div className="h-52 bg-[#2f4968]" />
                 <div className="p-5 space-y-3">
-                  <div className="h-3 bg-slate-800/60 rounded w-1/3" />
-                  <div className="h-5 bg-slate-800/60 rounded w-3/4" />
-                  <div className="h-4 bg-slate-800/60 rounded w-1/2" />
-                  <div className="h-6 bg-slate-800/60 rounded w-2/5 mt-4" />
+                  <div className="h-3 bg-slate-500/40 rounded w-1/3" />
+                  <div className="h-5 bg-slate-500/40 rounded w-3/4" />
+                  <div className="h-4 bg-slate-500/40 rounded w-1/2" />
+                  <div className="h-6 bg-slate-500/40 rounded w-2/5 mt-4" />
                 </div>
               </div>
             ))}

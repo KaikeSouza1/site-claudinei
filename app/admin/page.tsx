@@ -66,7 +66,7 @@ export default function AdminDashboard() {
       {/* CARDS DE ESTATÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Total de Imóveis</p>
             <Home size={18} className="text-gold" />
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           <p className="font-serif text-4xl text-white">{carregando ? '...' : stats.totalImoveis}</p>
         </div>
 
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Disponíveis</p>
             <CheckCircle size={18} className="text-green-400" />
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
           <p className="font-serif text-4xl text-white">{carregando ? '...' : stats.imoveisDisponiveis}</p>
         </div>
 
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Vendidos</p>
             <XCircle size={18} className="text-red-400" />
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
           <p className="font-serif text-4xl text-white">{carregando ? '...' : stats.imoveisVendidos}</p>
         </div>
 
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Alugados</p>
             <Home size={18} className="text-blue-400" />
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
       {/* CARDS ADICIONAIS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Reservados</p>
             <Clock size={18} className="text-yellow-400" />
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
           <p className="font-serif text-4xl text-white">{carregando ? '...' : stats.imoveisReservados}</p>
         </div>
 
-        <div className="bg-[#1a304d]/50 border border-slate-700/50 p-6 rounded-xl flex flex-col gap-4">
+        <div className="bg-[#2f4968]/60 border border-slate-500/30 p-6 rounded-xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-slate-400">
             <p className="text-xs uppercase tracking-widest font-bold">Ativos no Site</p>
             <Eye size={18} className="text-green-400" />
