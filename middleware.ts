@@ -1,28 +1,69 @@
-// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { validateSessionToken, SESSION_COOKIE } from '@/lib/auth';
 
-export function middleware(request: NextRequest) {
-  // Pega o nosso "crachá" (cookie) de autorização
-  const adminToken = request.cookies.get('admin_token')?.value;
-  const isLoginPage = request.nextUrl.pathname === '/login';
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  // Se tentar acessar o /admin sem o crachá, manda pro /login
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (adminToken !== 'claudiney_autorizado') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // ── Rotas de auth — sempre passam ────────────────────────────────────────
+  if (pathname.startsWith('/api/auth/')) {
+    return NextResponse.next();
   }
 
-  // Se já estiver logado e tentar acessar o /login, manda pro painel
-  if (isLoginPage && adminToken === 'claudiney_autorizado') {
-    return NextResponse.redirect(new URL('/admin', request.url));
+  // ── Webhooks externos (Asaas) — validam com token próprio, não cookie
+  if (pathname.startsWith('/api/webhooks/')) {
+    return NextResponse.next();
+  }
+
+  // ── Determina se é rota admin (UI ou API) ─────────────────────────────────
+  const isAdminUI   = pathname.startsWith('/admin');
+  const isAdminAPI  = pathname.startsWith('/api/admin');
+  const isLoginPage = pathname === '/login';
+
+  if (!isAdminUI && !isAdminAPI && !isLoginPage) {
+    return NextResponse.next();
+  }
+
+  // ── Valida o token de sessão ──────────────────────────────────────────────
+  const token   = request.cookies.get(SESSION_COOKIE)?.value ?? '';
+  const isValid = token ? await validateSessionToken(token) : false;
+
+  // ── Página de login ───────────────────────────────────────────────────────
+  if (isLoginPage) {
+    if (isValid) return NextResponse.redirect(new URL('/admin', request.url));
+    return NextResponse.next();
+  }
+
+  // ── Rotas de API admin ────────────────────────────────────────────────────
+  if (isAdminAPI) {
+    if (!isValid) {
+      return NextResponse.json(
+        { error: 'Não autenticado. Faça login em /login.' },
+        { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="admin"' } },
+      );
+    }
+    return NextResponse.next();
+  }
+
+  // ── Páginas admin (UI) ────────────────────────────────────────────────────
+  if (isAdminUI) {
+    if (!isValid) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
-// Dizemos ao Next.js para só rodar esse middleware nessas rotas específicas
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: [
+    '/admin/:path*',
+    '/login',
+    '/api/admin/:path*',
+    '/api/auth/:path*',
+    '/api/webhooks/:path*', // passa pelo early-return acima, não exige cookie
+  ],
 };

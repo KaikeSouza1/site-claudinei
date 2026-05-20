@@ -133,7 +133,7 @@ export default function Home() {
 
             <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed">
               Especialistas em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica precisa. 
-              Segurança jurídica e técnica para seus investimentos há mais de 10 anos.
+              Segurança jurídica e técnica para seus investimentos.
             </p>
 
             {/* Botões de Ação no Topo */}

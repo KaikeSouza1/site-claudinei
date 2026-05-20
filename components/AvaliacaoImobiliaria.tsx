@@ -115,7 +115,7 @@ export default function AvaliacaoImobiliaria() {
               <div className="space-y-2">
                 <p className="text-white font-semibold text-sm">✓ Experiência Comprovada</p>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Mais de 10 anos avaliando imóveis urbanos, rurais e especiais.
+                  Avaliando imóveis urbanos, rurais e especiais.
                 </p>
               </div>
               <div className="space-y-2">

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 
 const numeros = [
-  { numero: '10+', label: 'Anos de Experiência', descricao: 'No mercado imobiliário' },
+  { numero: 'Vasta', label: 'Experiência no Mercado', descricao: 'No mercado imobiliário' },
   { numero: '500+', label: 'Imóveis Negociados', descricao: 'Urbanos e rurais' },
   { numero: '1000+', label: 'Hectares', descricao: 'Em áreas rurais transacionadas' },
   { numero: '98%', label: 'Taxa de Satisfação', descricao: 'Clientes recomendando' },

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:developers-business.picpay.com)",
+      "WebSearch",
+      "WebFetch(domain:picpay.github.io)",
+      "WebFetch(domain:docs.asaas.com)"
+    ]
+  }
+}
