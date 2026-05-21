@@ -121,87 +121,82 @@ export default function Home() {
       {/* ═══════════════════════════════════
           HERO
       ═══════════════════════════════════ */}
-      <section className="relative z-10 w-full min-h-screen flex items-center">
+      <section className="relative z-10 w-full min-h-screen flex items-center overflow-hidden">
         <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-32 pb-20">
-        <div className="grid md:grid-cols-[60fr_40fr] gap-8 items-center">
+          <div className="grid md:grid-cols-[68fr_32fr] gap-8 items-center">
 
-          {/* Coluna esquerda — texto */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-7"
-          >
-            <div className="flex items-center gap-4 text-gold text-xs tracking-widest uppercase">
-              <span className="w-10 h-[1px] bg-gold block" />
-              CRECI 37016-PR · CNAI 45505
-            </div>
+            {/* Coluna esquerda — texto */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-7"
+            >
+              <div className="flex items-center gap-4 text-gold text-xs tracking-widest uppercase">
+                <span className="w-10 h-[1px] bg-gold block" />
+                CRECI 37016-PR · CNAI 45505
+              </div>
 
-            <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
-              Seu Patrimônio Tratado com <br />
-              <span className="text-gold italic">Técnica, Estratégia</span> e Resultado
-            </h1>
+              <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
+                Seu Patrimônio Tratado com <br />
+                <span className="text-gold italic">Técnica, Estratégia</span> e Resultado
+              </h1>
 
-            <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed">
-              Especialista em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica. 
-              Segurança jurídica e técnica para seus investimentos.
-            </p>
+              <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed">
+                Especialista em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica.
+                Segurança jurídica e técnica para seus investimentos.
+              </p>
 
-            {/* Botões de Ação no Topo */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <a
-                href="#destaques"
-                className="inline-flex items-center justify-center gap-2 bg-gold text-[#04122b] hover:bg-gold/90 transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest group shadow-[0_0_20px_rgba(197,160,89,0.3)]"
-              >
-                Ver Portfólio
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </a>
-              <a
-                href="#avaliacao"
-                className="inline-flex items-center justify-center gap-2 border-2 border-gold text-gold bg-[#04122b]/80 backdrop-blur-md hover:bg-gold hover:text-[#04122b] transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg"
-              >
-                Laudo de Avaliação
-              </a>
-            </div>
-          </motion.div>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <a
+                  href="#destaques"
+                  className="inline-flex items-center justify-center gap-2 bg-gold text-[#04122b] hover:bg-gold/90 transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest group shadow-[0_0_20px_rgba(197,160,89,0.3)]"
+                >
+                  Ver Portfólio
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </a>
+                <a
+                  href="#avaliacao"
+                  className="inline-flex items-center justify-center gap-2 border-2 border-gold text-gold bg-[#04122b]/80 backdrop-blur-md hover:bg-gold hover:text-[#04122b] transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg"
+                >
+                  Laudo de Avaliação
+                </a>
+              </div>
+            </motion.div>
 
-          {/* Coluna direita — foto do corretor */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative flex justify-end"
-          >
-            {/* Moldura decorativa deslocada */}
-            <div className="absolute right-0 top-4 w-[calc(100%-2rem)] max-w-[280px] h-full border border-slate-600/40 rounded-[28px] hidden md:block pointer-events-none translate-x-3 translate-y-3" />
-
-            {/* Card da foto */}
-            <div className="relative z-10 w-full max-w-[255px] md:max-w-[270px] ml-auto">
-              <div
-                className="w-full rounded-[28px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.55)]"
-                style={{ aspectRatio: '3/4' }}
-              >
+            {/* Coluna direita — foto */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="flex justify-end -mr-24 md:-mr-48"
+            >
+              <div style={{ position: 'relative', width: '100%', maxWidth: '260px', borderRadius: '28px', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' }}>
                 <img
                   src="/foto_claudinei.png"
                   alt="Claudiney W. Otto Junior — Corretor de Imóveis"
-                  className="w-full h-full object-cover object-top"
+                  style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
                 />
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  background: 'linear-gradient(to top, rgba(4,18,43,0.97) 0%, rgba(4,18,43,0.7) 55%, transparent 100%)',
+                  padding: '28px 16px 20px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ fontFamily: 'Georgia,serif', color: '#c5a059', fontSize: '15px', lineHeight: 1.3, margin: 0, textAlign: 'center' }}>
+                    Claudiney W. Otto Junior.
+                  </p>
+                  <p style={{ fontSize: '9px', color: 'rgba(197,160,89,0.8)', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '5px 0 0', textAlign: 'center' }}>
+                    CRECI 37016-PR • CNAI 45505
+                  </p>
+                  <p style={{ fontSize: '9px', color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase', margin: '3px 0 0', textAlign: 'center' }}>
+                    Corretor · Avaliador Imobiliário
+                  </p>
+                </div>
               </div>
+            </motion.div>
 
-              {/* Badge flutuante */}
-              <div className="absolute -bottom-5 -left-5 md:-left-10 bg-[#04122b] border border-gold/30 rounded-2xl px-5 py-4 shadow-2xl max-w-[250px] flex flex-col items-center text-center">
-                <p className="font-serif text-gold text-base leading-tight text-center w-full">Claudiney W. Otto Junior.</p>
-                <p className="text-[10px] text-gold/70 tracking-widest uppercase mt-1 text-center w-full">
-                  CRECI 37016-PR • CNAI 45505
-                </p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mt-0.5 text-center w-full">
-                  Corretor de Imóveis e Avaliador Imobiliário
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-        </div>
+          </div>
         </div>
       </section>
 
@@ -302,7 +297,7 @@ export default function Home() {
                     className="flex transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                   >
-                    {imoveisDestaque.map((item, index) => (
+                    {imoveisDestaque.map((item) => (
                       <div key={item.id} className="w-full flex-shrink-0 px-2">
                         <Link
                           href={`/imovel/${item.id}`}
