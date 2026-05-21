@@ -105,14 +105,25 @@ export default function Home() {
 
   return (
     <main className="flex-1 bg-[#223a51] flex flex-col relative overflow-hidden text-slate-100">
-      {/* Gradiente de fundo */}
-      <div className="absolute top-0 w-full h-[800px] bg-luxury-gradient z-0 pointer-events-none opacity-95" />
+      {/* Imagem de fundo do hero com overlays de contraste */}
+      <div
+        className="absolute top-0 w-full h-screen z-0 pointer-events-none"
+        style={{ backgroundImage: 'url(/fundo.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}
+      >
+        {/* Véu base uniforme — deixa a imagem aparecer dos dois lados */}
+        <div className="absolute inset-0 bg-[#04122b]/55" />
+        {/* Extra escuro só no lado esquerdo para legibilidade do texto */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#04122b]/45 via-[#04122b]/20 to-transparent" />
+        {/* Fade suave para o fundo da página */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#223a51]" />
+      </div>
 
       {/* ═══════════════════════════════════
           HERO
       ═══════════════════════════════════ */}
-      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 md:px-10 pt-32 pb-16">
-        <div className="grid md:grid-cols-2 gap-10 items-center">
+      <section className="relative z-10 w-full min-h-screen flex items-center">
+        <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-32 pb-20">
+        <div className="grid md:grid-cols-[60fr_40fr] gap-8 items-center">
 
           {/* Coluna esquerda — texto */}
           <motion.div
@@ -159,13 +170,13 @@ export default function Home() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative flex justify-center md:justify-end"
+            className="relative flex justify-end"
           >
             {/* Moldura decorativa deslocada */}
-            <div className="absolute right-0 top-4 w-[calc(100%-2rem)] max-w-[340px] h-full border border-slate-600/40 rounded-[28px] hidden md:block pointer-events-none translate-x-3 translate-y-3" />
+            <div className="absolute right-0 top-4 w-[calc(100%-2rem)] max-w-[280px] h-full border border-slate-600/40 rounded-[28px] hidden md:block pointer-events-none translate-x-3 translate-y-3" />
 
             {/* Card da foto */}
-            <div className="relative z-10 w-full max-w-[320px] md:max-w-[340px]">
+            <div className="relative z-10 w-full max-w-[255px] md:max-w-[270px] ml-auto">
               <div
                 className="w-full rounded-[28px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.55)]"
                 style={{ aspectRatio: '3/4' }}
@@ -178,15 +189,19 @@ export default function Home() {
               </div>
 
               {/* Badge flutuante */}
-              <div className="absolute -bottom-5 -left-5 md:-left-10 bg-[#04122b] border border-gold/30 rounded-2xl px-5 py-4 shadow-2xl max-w-[230px]">
-                <p className="font-serif text-gold text-base leading-tight">Claudiney W. Otto Junior</p>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400 mt-1">
-                  Corretor · Avaliador
+              <div className="absolute -bottom-5 -left-5 md:-left-10 bg-[#04122b] border border-gold/30 rounded-2xl px-5 py-4 shadow-2xl max-w-[250px] flex flex-col items-center text-center">
+                <p className="font-serif text-gold text-base leading-tight text-center w-full">Claudiney W. Otto Junior.</p>
+                <p className="text-[10px] text-gold/70 tracking-widest uppercase mt-1 text-center w-full">
+                  CRECI 37016-PR • CNAI 45505
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mt-0.5 text-center w-full">
+                  Corretor de Imóveis e Avaliador Imobiliário
                 </p>
               </div>
             </div>
           </motion.div>
 
+        </div>
         </div>
       </section>
 
