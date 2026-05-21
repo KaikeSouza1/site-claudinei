@@ -3,10 +3,10 @@
 import { motion } from 'framer-motion'
 
 const numeros = [
-  { numero: 'Vasta', label: 'Experiência no Mercado', descricao: 'No mercado imobiliário' },
-  { numero: '500+', label: 'Imóveis Negociados', descricao: 'Urbanos e rurais' },
-  { numero: '1000+', label: 'Hectares', descricao: 'Em áreas rurais transacionadas' },
-  { numero: '98%', label: 'Taxa de Satisfação', descricao: 'Clientes recomendando' },
+  { numero: 'Sólida', label: 'Experiência Consolidada', descricao: 'No mercado imobiliário, avaliação e análise patrimonial' },
+  { numero: 'CRECI', label: '37016-PR', descricao: 'Corretor de Imóveis habilitado no Paraná' },
+  { numero: 'CNAI', label: '45505', descricao: 'Avaliador imobiliário cadastrado para emissão de parecer técnico' },
+  { numero: '4', label: 'Frentes de Atuação', descricao: 'Urbanos, rurais, florestais e avaliação mercadológica' },
 ]
 
 const containerVariants = {
@@ -43,7 +43,7 @@ export default function NumerosExpertise() {
         >
           <p className="text-xs text-gold tracking-widest uppercase mb-4">Nosso Histórico</p>
           <h2 className="font-serif text-4xl md:text-5xl text-white">
-            Expertise em <span className="text-gold">Números</span>
+            Expertise Técnica <span className="text-gold">Aplicada ao Mercado</span>
           </h2>
         </motion.div>
 
@@ -88,9 +88,9 @@ export default function NumerosExpertise() {
           className="text-center mt-16"
         >
           <p className="max-w-3xl mx-auto text-slate-300 text-base md:text-lg leading-relaxed">
-            Transformamos a expertise em resultados concretos. Cada número representa
-            confiança depositada por clientes que escolheram trabalhar conosco em suas
-            operações imobiliárias mais importantes.
+            Unimos experiência prática em negociações imobiliárias, avaliação mercadológica
+            e análise patrimonial para orientar proprietários, compradores e investidores
+            com segurança, estratégia e precisão técnica.
           </p>
         </motion.div>
       </div>

@@ -123,16 +123,16 @@ export default function Home() {
           >
             <div className="flex items-center gap-4 text-gold text-xs tracking-widest uppercase">
               <span className="w-10 h-[1px] bg-gold block" />
-              CRECI 37016 · CNAI 45505
+              CRECI 37016-PR · CNAI 45505
             </div>
 
             <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
               Seu Patrimônio Tratado com <br />
-              <span className="text-gold italic">Estratégia</span> e Resultado
+              <span className="text-gold italic">Técnica, Estratégia</span> e Resultado
             </h1>
 
             <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed">
-              Especialistas em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica precisa. 
+              Especialista em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica. 
               Segurança jurídica e técnica para seus investimentos.
             </p>
 

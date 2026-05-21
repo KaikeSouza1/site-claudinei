@@ -7,7 +7,7 @@ export default function Header() {
       <div className="flex justify-between items-center px-10 py-8 max-w-7xl mx-auto">
         <div>
           <h1 className="font-serif text-2xl tracking-wide text-white">Claudiney W. Otto Junior.</h1>
-          <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016 • CNAI 45505</p>
+          <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016-PR • CNAI 45505</p>
         </div>
         
         <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">

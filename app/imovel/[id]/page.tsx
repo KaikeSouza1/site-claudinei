@@ -275,7 +275,7 @@ export default function ImovelPage() {
                     </div>
                     <p style={{ fontFamily: 'Georgia,serif', fontSize: 17, color: '#fff', margin: '0 0 5px' }}>Claudiney W. Otto Junior</p>
                     <p style={{ fontSize: 10, color: '#475569', letterSpacing: '0.13em', textTransform: 'uppercase' as const, margin: '0 0 5px' }}>Corretor e Avaliador de Imóveis</p>
-                    <p style={{ fontSize: 10, color: `${C.gold}80`, letterSpacing: '0.11em', textTransform: 'uppercase' as const, margin: 0 }}>CRECI 37016 · CNAI 45505</p>
+                    <p style={{ fontSize: 10, color: `${C.gold}80`, letterSpacing: '0.11em', textTransform: 'uppercase' as const, margin: 0 }}>CRECI 37016-PR · CNAI 45505</p>
                   </div>
 
                   {/* Botões */}

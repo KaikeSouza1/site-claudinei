@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm font-medium">
           
           <div className="flex items-center gap-4">
-            <p className="text-center md:text-left text-slate-200">© 2026 - CLAUDINEY W. OTTO JUNIOR<br className="md:hidden"/> CRECI 37016 • CNAI 45505</p>
+            <p className="text-center md:text-left text-slate-200">© 2026 - CLAUDINEY W. OTTO JUNIOR<br className="md:hidden"/> CRECI 37016-PR • CNAI 45505</p>
             
             {/* Botão do Admin */}
             <Link 

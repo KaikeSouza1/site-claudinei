@@ -71,7 +71,7 @@ export default function AreasAtuacao() {
       >
         <p className="text-xs text-gold tracking-widest uppercase mb-4">Nossa Expertise</p>
         <h2 className="font-serif text-4xl md:text-5xl text-white mb-6 leading-tight">
-          Especialistas em <span className="text-gold">Patrimônio Imobiliário</span>
+          Especialista em <span className="text-gold">Patrimônio Imobiliário</span>
         </h2>
         <p className="max-w-2xl mx-auto text-slate-300 text-base md:text-lg leading-relaxed">
           Atendemos as quatro frentes estratégicas do mercado imobiliário com expertise técnica,
