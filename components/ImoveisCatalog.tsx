@@ -42,7 +42,7 @@ export default function ImoveisCatalog({
 
   const currentQuery = useMemo(
     () => ({
-      finalidade: defaultFinalidade,
+      finalidade: searchParams.get('finalidade') ?? defaultFinalidade,
       tipo: searchParams.get('tipo') ?? '',
       localizacao: searchParams.get('localizacao') ?? '',
       busca: searchParams.get('busca') ?? '',
@@ -70,8 +70,8 @@ export default function ImoveisCatalog({
         .eq('ativo', true)
         .or('status.is.null,status.eq.disponivel,status.eq.reservado')
 
-      if (defaultFinalidade) {
-        query = query.ilike('finalidade', `%${defaultFinalidade.toLowerCase()}%`)
+      if (queryFilters.finalidade) {
+        query = query.ilike('finalidade', `%${queryFilters.finalidade.toLowerCase()}%`)
       }
 
       if (queryFilters.tipo) {
@@ -114,7 +114,7 @@ export default function ImoveisCatalog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const qs = buildQueryString({ ...filters, finalidade: defaultFinalidade })
+    const qs = buildQueryString(filters)
     router.replace(`${routeBase}${qs ? `?${qs}` : ''}`)
     setShowFilters(false)
   }

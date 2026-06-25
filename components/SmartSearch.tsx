@@ -11,6 +11,7 @@ const tiposAtivos = ['Reflorestamento', 'Reserva Legal', 'Crédito de Carbono']
 
 export default function SmartSearch() {
   const router = useRouter()
+  const [finalidade, setFinalidade] = useState<'Venda' | 'Locação'>('Venda')
   const [categoria, setCategoria] = useState<'urbano' | 'rural' | 'ativos'>('urbano')
   const [tipo, setTipo] = useState('')
   const [localizacao, setLocalizacao] = useState('')
@@ -22,6 +23,7 @@ export default function SmartSearch() {
     if (tipo) params.append('tipo', tipo)
     if (localizacao) params.append('busca', localizacao)
     params.append('categoria', categoria)
+    params.append('finalidade', finalidade)
     
     router.push(`/imoveis?${params.toString()}`)
   }
@@ -55,6 +57,19 @@ export default function SmartSearch() {
 
       {/* Card Principal de Busca */}
       <div className="bg-[#173a57] backdrop-blur-xl border border-slate-500/30 rounded-3xl rounded-tl-none shadow-2xl p-4 md:p-2">
+        <div className="flex flex-wrap gap-2 mb-4 justify-center md:justify-start">
+          {['Venda', 'Locação'].map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setFinalidade(option as 'Venda' | 'Locação')}
+              className={`px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all ${finalidade === option ? 'bg-gold text-[#04122b]' : 'bg-[#04122b]/60 text-slate-300 hover:bg-[#0f2d4f]'}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-center gap-2">
           
           {/* Filtro de Tipo (Dinâmico) */}
@@ -137,7 +152,7 @@ export default function SmartSearch() {
             type="submit"
             className="w-full md:w-auto bg-gold text-[#04122b] hover:bg-white transition-all px-10 py-5 rounded-2xl flex items-center justify-center gap-3 group"
           >
-            <span className="text-xs font-black uppercase tracking-widest">Buscar Ativos</span>
+            <span className="text-xs font-black uppercase tracking-widest">Buscar Imóveis</span>
             <Search size={20} className="group-hover:scale-110 transition-transform" />
           </button>
         </form>

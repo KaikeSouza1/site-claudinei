@@ -113,9 +113,9 @@ export default function Home() {
         {/* Véu base uniforme — deixa a imagem aparecer dos dois lados */}
         <div className="absolute inset-0 bg-[#04122b]/55" />
         {/* Extra escuro só no lado esquerdo para legibilidade do texto */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#04122b]/45 via-[#04122b]/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#04122b]/45 via-[#04122b]/20 to-transparent" />
         {/* Fade suave para o fundo da página */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#223a51]" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-[#223a51]" />
       </div>
 
       {/* ═══════════════════════════════════
@@ -130,13 +130,8 @@ export default function Home() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="space-y-7"
+              className="space-y-7 text-center md:text-left"
             >
-              <div className="flex items-center gap-4 text-gold text-xs tracking-widest uppercase">
-                <span className="w-10 h-[1px] bg-gold block" />
-                CRECI 37016-PR · CNAI 45505
-              </div>
-
               <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
                 Seu Patrimônio Tratado com <br />
                 <span className="text-gold italic">Técnica, Estratégia</span> e Resultado
@@ -147,7 +142,7 @@ export default function Home() {
                 Segurança jurídica e técnica para seus investimentos.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
                 <a
                   href="#destaques"
                   className="inline-flex items-center justify-center gap-2 bg-gold text-[#04122b] hover:bg-gold/90 transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest group shadow-[0_0_20px_rgba(197,160,89,0.3)]"
@@ -161,6 +156,10 @@ export default function Home() {
                 >
                   Laudo de Avaliação
                 </a>
+              </div>
+
+              <div className="mt-10 md:mt-12 max-w-4xl mx-auto md:mx-0">
+                <SmartSearch />
               </div>
             </motion.div>
 
@@ -200,24 +199,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════
-          SMART SEARCH
-      ═══════════════════════════════════ */}
-      <section className="relative z-20 max-w-5xl w-full mx-auto px-6 md:px-10 pb-8 mt-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <SmartSearch />
-        </motion.div>
-      </section>
-
-      {/* ═══════════════════════════════════
-          DESTAQUES (Agora no Topo)
-      ═══════════════════════════════════ */}
       <section id="destaques" className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-10 py-12 scroll-mt-20">
-        <div className="bg-[#173a57]/80 backdrop-blur-xl rounded-[32px] border border-slate-500/20 shadow-[0_40px_120px_rgba(15,23,42,0.18)] p-6 md:p-10">
+        <div className="bg-[#173a57]/80 backdrop-blur-xl rounded-4xl border border-slate-500/20 shadow-[0_40px_120px_rgba(15,23,42,0.18)] p-6 md:p-10">
           {/* Cabeçalho da seção */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
@@ -298,7 +281,7 @@ export default function Home() {
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                   >
                     {imoveisDestaque.map((item) => (
-                      <div key={item.id} className="w-full flex-shrink-0 px-2">
+                      <div key={item.id} className="w-full shrink-0 px-2">
                         <Link
                           href={`/imovel/${item.id}`}
                           className="relative group overflow-hidden rounded-[24px] bg-[#5a7ca5] border border-slate-300/30 shadow-[0_30px_90px_rgba(19,36,62,0.18)] transition-transform duration-300 hover:-translate-y-1 block"
@@ -313,10 +296,10 @@ export default function Home() {
                               Sem imagem
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#3f6f92] via-[#8ca7d0]/25 to-transparent" />
+                          <div className="absolute inset-0 bg-linear-to-t from-[#3f6f92] via-[#8ca7d0]/25 to-transparent" />
 
                           {/* Badge destaque */}
-                          <div className="absolute top-5 left-5 bg-gradient-to-r from-[#2b5f86] via-[#4e7fab] to-[#8ba7cb] text-[#04122b] px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_10px_40px_rgba(29,60,96,0.18)]">
+                          <div className="absolute top-5 left-5 bg-linear-to-r from-[#2b5f86] via-[#4e7fab] to-[#8ba7cb] text-[#04122b] px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_10px_40px_rgba(29,60,96,0.18)]">
                             Destaque
                           </div>
 

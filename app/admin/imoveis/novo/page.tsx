@@ -1,17 +1,37 @@
 'use client'
 
-import { useState } from 'react';
-import { Save, Link as LinkIcon, Loader2, UploadCloud, X, Star, MapPin } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { Save, Loader2, UploadCloud, X, Star, MapPin, ChevronLeft, ChevronRight, Crop } from 'lucide-react';
+import Cropper, { Area } from 'react-easy-crop';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+
+type GaleriaItem = {
+  id: string;
+  url: string;
+  file?: File;
+  editedFile?: File;
+};
+
+type CropState = {
+  x: number;
+  y: number;
+  outputWidth: number;
+  zoom: number;
+  rotation: number;
+};
+
+function gerarId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export default function NovoImovel() {
   const router = useRouter();
   
-  const [linkImportacao, setLinkImportacao] = useState('');
-  const [importando, setImportando] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [uploadingGaleria, setUploadingGaleria] = useState(false);
 
   const [formData, setFormData] = useState({
     codigo: '', titulo: '', descricao: '', preco: '', tipo: 'Casa', finalidade: 'Venda',
@@ -19,7 +39,16 @@ export default function NovoImovel() {
     quartos: 0, banheiros: 0, vagas: 0, area: 0, imagem_url: '', destaque: true, ativo: true, status: 'disponivel',
   });
 
-  const [galeria, setGaleria] = useState<string[]>([]);
+  const [galeria, setGaleria] = useState<GaleriaItem[]>([]);
+  const [uploadingGaleria, setUploadingGaleria] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState<GaleriaItem | null>(null);
+  const [editPreviewUrl, setEditPreviewUrl] = useState('');
+  const [cropState, setCropState] = useState<CropState>({ x: 0, y: 0, outputWidth: 1200, zoom: 1, rotation: 0 });
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [editingUploading, setEditingUploading] = useState(false);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // ==========================================
   // UPLOAD DE VÁRIAS FOTOS EM LOTE
@@ -30,7 +59,6 @@ export default function NovoImovel() {
 
     setUploadingGaleria(true);
     
-    // Manda todas as fotos juntas no mesmo FormData (igual sua API espera)
     const data = new FormData();
     Array.from(files).forEach(file => data.append("file", file));
 
@@ -40,10 +68,9 @@ export default function NovoImovel() {
       
       if (result.urls) {
         setGaleria((prev) => {
-          const novaGaleria = [...prev, ...result.urls];
-          // Se ainda não tem capa definida, a primeira imagem vira a capa automaticamente
+          const novaGaleria = [...prev, ...result.urls.map((url: string) => ({ id: gerarId(), url }))];
           if (!formData.imagem_url && novaGaleria.length > 0) {
-            setFormData(prevForm => ({ ...prevForm, imagem_url: novaGaleria[0] }));
+            setFormData(prevForm => ({ ...prevForm, imagem_url: novaGaleria[0].url }));
           }
           return novaGaleria;
         });
@@ -57,49 +84,127 @@ export default function NovoImovel() {
     setUploadingGaleria(false);
   };
 
+  const moverFoto = (index: number, delta: number) => {
+    setGaleria((prev) => {
+      const next = [...prev];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const abrirEditor = async (item: GaleriaItem) => {
+    try {
+      setEditItem(item);
+      const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(item.url)}`);
+      if (!response.ok) {
+        throw new Error('Não foi possível carregar a imagem para edição');
+      }
+      const blob = await response.blob();
+      const previewUrl = URL.createObjectURL(blob);
+      setEditPreviewUrl(previewUrl);
+      setCropState({ x: 0, y: 0, outputWidth: 1200, zoom: 1, rotation: 0 });
+      setCroppedAreaPixels(null);
+      setEditModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      alert('Não foi possível abrir o editor de imagem.');
+    }
+  };
+
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const fecharEditor = () => {
+    setEditModalOpen(false);
+    setEditItem(null);
+    setCropState({ x: 0, y: 0, outputWidth: 1200, zoom: 1, rotation: 0 });
+    if (editPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(editPreviewUrl);
+    }
+    setEditPreviewUrl('');
+    setEditingUploading(false);
+  };
+
+  const ajustarCrop = (field: 'zoom' | 'rotation' | 'outputWidth', value: number) => {
+    setCropState((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+
+  const aplicarEdicao = async () => {
+    if (!editItem || !canvasRef.current) return;
+    if (editingUploading) return;
+
+    if (!croppedAreaPixels) {
+      return alert('Selecione uma área para cortar.');
+    }
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.src = editPreviewUrl;
+    await img.decode();
+
+    const { width: cropWidth, height: cropHeight, x, y } = croppedAreaPixels;
+    const outputWidth = cropState.outputWidth;
+    const outputHeight = Math.round((cropHeight / cropWidth) * outputWidth);
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+    ctx.clearRect(0, 0, outputWidth, outputHeight);
+    ctx.drawImage(img, x, y, cropWidth, cropHeight, 0, 0, outputWidth, outputHeight);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85));
+    if (!blob) {
+      return alert('Não foi possível gerar a imagem editada.');
+    }
+
+    const file = new File([blob], `imovel-edit-${editItem.id}.webp`, { type: 'image/webp' });
+    const data = new FormData();
+    data.append('file', file);
+
+    setEditingUploading(true);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: data });
+      const result = await res.json();
+      if (!res.ok || !result.urls?.length) {
+        throw new Error(result.error || 'Erro ao enviar imagem editada');
+      }
+
+      const novaUrl = result.urls[0];
+      setGaleria((prev) => prev.map((item) => item.id === editItem.id ? { ...item, url: novaUrl } : item));
+      if (formData.imagem_url === editItem.url) {
+        setFormData({ ...formData, imagem_url: novaUrl });
+      }
+      fecharEditor();
+      alert('Imagem editada e enviada com sucesso.');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao enviar a imagem editada.');
+    } finally {
+      setEditingUploading(false);
+    }
+  };
+
   const definirComoCapa = (url: string) => {
     setFormData({ ...formData, imagem_url: url });
   };
 
   const removerFoto = (urlParaRemover: string) => {
-    setGaleria(galeria.filter((url) => url !== urlParaRemover));
+    const novaGaleria = galeria.filter((item) => item.url !== urlParaRemover);
     if (formData.imagem_url === urlParaRemover) {
-      setFormData({ ...formData, imagem_url: '' });
+      setFormData({ ...formData, imagem_url: novaGaleria[0]?.url || '' });
     }
+    setGaleria(novaGaleria);
   };
 
-  const handleImportar = async () => {
-    if (!linkImportacao) return alert("Cole o link primeiro!");
-    setImportando(true);
-    try {
-      const res = await fetch('/api/admin/imoveis/importar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ link: linkImportacao })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        const novaGaleria = Array.isArray(data.galeria) ? Array.from(new Set(data.galeria)) : [];
-        const imagemCapa = data.imagem_url || novaGaleria[0] || '';
-
-        setGaleria(novaGaleria);
-        setFormData(prevForm => ({
-          ...prevForm,
-          ...data,
-          imagem_url: imagemCapa,
-          preco: data.preco ? data.preco.toString() : '',
-          galeria: undefined, // Remove o campo galeria que não existe na tabela
-        }));
-
-        alert("Dados importados! Revise as informações.");
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      alert("Erro ao importar.");
-    }
-    setImportando(false);
-  };
 
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +227,7 @@ export default function NovoImovel() {
 
       if (imovelError) throw imovelError;
 
-      const fotosParaGaleria = galeria.filter(url => url !== formData.imagem_url);
+      const fotosParaGaleria = galeria.map(item => item.url).filter(url => url !== formData.imagem_url);
 
       if (fotosParaGaleria.length > 0 && imovelSalvo) {
         const fotosInsert = fotosParaGaleria.map(url => ({
@@ -159,17 +264,6 @@ export default function NovoImovel() {
         </div>
       </div>
 
-      <div className="bg-[#2f4968]/40 border border-gold/20 rounded-xl p-6 mb-8">
-        <h2 className="text-xs font-bold text-gold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <LinkIcon size={14} /> Importar da Porto Iguaçu
-        </h2>
-        <div className="flex flex-col md:flex-row gap-4">
-          <input type="url" placeholder="https://..." value={linkImportacao} onChange={(e) => setLinkImportacao(e.target.value)} className="flex-1 bg-[#2f4968]/80 border border-slate-500/40 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-gold text-sm" />
-          <button type="button" onClick={handleImportar} disabled={importando} className="bg-gold/10 text-gold border border-gold/30 px-6 py-3 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-gold hover:text-[#04122b] transition-colors whitespace-nowrap">
-            {importando ? 'Puxando dados...' : 'Importar'}
-          </button>
-        </div>
-      </div>
 
       <form onSubmit={handleSalvar} className="space-y-8">
         
@@ -191,11 +285,11 @@ export default function NovoImovel() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {galeria.map((url, index) => {
-                const isCapa = url === formData.imagem_url;
+              {galeria.map((item, index) => {
+                const isCapa = item.url === formData.imagem_url;
                 return (
-                  <div key={index} className={`relative aspect-square rounded-lg overflow-hidden border-2 group cursor-pointer ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`} onClick={() => definirComoCapa(url)}>
-                    <img src={url} alt={`Foto ${index}`} className="w-full h-full object-cover" />
+                  <div key={item.id} className={`relative aspect-square rounded-lg overflow-hidden border-2 group cursor-pointer ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`} onClick={() => definirComoCapa(item.url)}>
+                    <img src={item.url} alt={`Foto ${index}`} className="w-full h-full object-cover" />
                     
                     {isCapa && (
                       <div className="absolute bottom-0 left-0 w-full bg-gold text-[#04122b] text-[9px] font-black uppercase tracking-widest text-center py-1">
@@ -203,15 +297,28 @@ export default function NovoImovel() {
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                      {!isCapa && (
-                        <span className="text-gold flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider hover:scale-110 transition-transform">
-                          <Star size={14} className="fill-gold" /> Definir Capa
-                        </span>
-                      )}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); removerFoto(url); }} className="text-red-400 flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider hover:scale-110 transition-transform">
-                        <X size={14} /> Remover
-                      </button>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-slate-300">#{index + 1}</span>
+                        {isCapa && (
+                          <div className="text-[10px] font-black uppercase tracking-widest text-gold">Capa</div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, -1); }} disabled={index === 0} className="rounded-xl bg-white/10 text-white disabled:opacity-40 px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, 1); }} disabled={index === galeria.length - 1} className="rounded-xl bg-white/10 text-white disabled:opacity-40 px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <ChevronRight size={14} />
+                        </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); abrirEditor(item); }} className="rounded-xl bg-gold/10 text-gold px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <Crop size={14} /> Editar
+                        </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); removerFoto(item.url); }} className="rounded-xl bg-red-500/10 text-red-300 px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <X size={14} /> Remover
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -219,6 +326,96 @@ export default function NovoImovel() {
             </div>
           )}
         </div>
+
+        {editModalOpen && editItem && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="relative w-full max-w-5xl rounded-4xl border border-slate-700/60 bg-[#08111f] shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-700/40">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-white">Editar Imagem</h3>
+                  <p className="text-xs text-slate-400">Cortar e redimensionar antes de salvar.</p>
+                </div>
+                <button type="button" onClick={fecharEditor} className="text-slate-300 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr] p-5">
+                <div className="rounded-3xl bg-[#0d1a2a] p-4 flex items-center justify-center min-h-90">
+                  <div className="relative w-full bg-[#061124] overflow-hidden rounded-3xl" style={{ minHeight: '420px' }}>
+                    <Cropper
+                      image={editPreviewUrl}
+                      crop={{ x: cropState.x, y: cropState.y }}
+                      zoom={cropState.zoom}
+                      rotation={cropState.rotation}
+                      aspect={undefined}
+                      onCropChange={(crop) => setCropState((prev) => ({ ...prev, x: crop.x, y: crop.y }))}
+                      onZoomChange={(zoom) => setCropState((prev) => ({ ...prev, zoom }))}
+                      onRotationChange={(rotation) => setCropState((prev) => ({ ...prev, rotation }))}
+                      onCropComplete={onCropComplete}
+                      objectFit="horizontal-cover"
+                      showGrid={false}
+                    />
+                  </div>
+                  <canvas ref={canvasRef} className="hidden" />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-3xl border border-slate-700/50 bg-[#081633] p-4">
+                    <div className="flex items-center justify-between mb-3 text-xs uppercase tracking-widest text-slate-400">
+                      <span>Recorte com o mouse</span>
+                      <span className="text-slate-300 text-[11px]">Arraste e redimensione livremente</span>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[11px] uppercase tracking-widest text-slate-400">Zoom</label>
+                        <input
+                          type="range"
+                          min={1}
+                          max={3}
+                          step={0.01}
+                          value={cropState.zoom}
+                          onChange={(e) => ajustarCrop('zoom', Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] uppercase tracking-widest text-slate-400">Rotação</label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={360}
+                          step={1}
+                          value={cropState.rotation}
+                          onChange={(e) => ajustarCrop('rotation', Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-slate-700/50 bg-[#081633] p-4">
+                    <div className="flex items-center justify-between mb-3 text-xs uppercase tracking-widest text-slate-400">
+                      <span>Redimensionar</span>
+                      <span>Saída até 1200px</span>
+                    </div>
+                    <input type="number" value={cropState.outputWidth} min={300} max={1200} onChange={(e) => ajustarCrop('outputWidth', Number(e.target.value))} className="w-full rounded-xl border border-slate-600 bg-[#0f1a2d] px-3 py-2 text-sm text-white outline-none" />
+                    <p className="text-[11px] text-slate-500 mt-2">A proporção final será calculada automaticamente.</p>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <button type="button" onClick={aplicarEdicao} disabled={editingUploading} className="w-full rounded-2xl bg-gold px-4 py-3 text-sm font-bold uppercase tracking-widest text-[#04122b] transition hover:bg-gold/90 disabled:opacity-50">
+                      {editingUploading ? 'Aplicando...' : 'Aplicar Corte e Redimensionar'}
+                    </button>
+                    <button type="button" onClick={fecharEditor} className="w-full rounded-2xl border border-slate-500/50 bg-[#12243a] px-4 py-3 text-sm font-bold uppercase tracking-widest text-slate-200 transition hover:bg-[#1c3351]">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-[#2f4968]/60 border border-slate-500/30 p-8 rounded-xl shadow-xl">
           <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-slate-500/30 pb-4">Informações Principais</h2>
