@@ -2,13 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Bed, Bath, Car, Maximize, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
+import { MapPin, Bed, Bath, Car, Maximize, ChevronRight, ChevronLeft, ArrowRight, Building2, Trees, Leaf, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import SmartSearch from '@/components/SmartSearch';
-import AreasAtuacao from '@/components/AreasAtuacao';
 import AvaliacaoImobiliaria from '@/components/AvaliacaoImobiliaria';
 import NumerosExpertise from '@/components/NumerosExpertise';
 import Link from 'next/link';
+
+const areas = [
+  {
+    id: 1,
+    title: 'Imóveis Urbanos',
+    description: 'Casas, terrenos, apartamentos e comerciais em principais regiões.',
+    icon: Building2,
+    color: 'from-blue-600 to-blue-400',
+    borderColor: 'border-blue-500/30',
+  },
+  {
+    id: 2,
+    title: 'Imóveis Rurais',
+    description: 'Chácaras, sítios, fazendas e áreas produtivas com potencial.',
+    icon: Trees,
+    color: 'from-green-600 to-green-400',
+    borderColor: 'border-green-500/30',
+  },
+  {
+    id: 3,
+    title: 'Ativos Florestais',
+    description: 'Áreas de reflorestamento e investimentos florestais estratégicos.',
+    icon: Leaf,
+    color: 'from-emerald-600 to-emerald-400',
+    borderColor: 'border-emerald-500/30',
+  },
+  {
+    id: 4,
+    title: 'Avaliação Imobiliária',
+    description: 'Laudos técnicos especializados e avaliação mercadológica profissional.',
+    icon: FileText,
+    color: 'from-amber-600 to-amber-400',
+    borderColor: 'border-amber-500/30',
+  },
+]
 
 export default function Home() {
   const [abaAtiva, setAbaAtiva] = useState('Venda');
@@ -62,7 +96,6 @@ export default function Home() {
   const linkVerTodos = abaAtiva === 'Venda' ? '/imoveis/venda' : '/imoveis/aluguel';
   const labelVerTodos = abaAtiva === 'Venda' ? 'Ver todos à venda' : 'Ver todos para alugar';
 
-  // Funções do carrossel
   const nextSlide = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex + 1 >= imoveisDestaque.length ? 0 : prevIndex + 1
@@ -79,7 +112,6 @@ export default function Home() {
     setCurrentIndex(index);
   };
 
-  // Funções para swipe no mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
@@ -94,27 +126,19 @@ export default function Home() {
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextSlide();
-    }
-    if (isRightSwipe) {
-      prevSlide();
-    }
+    if (isLeftSwipe) nextSlide();
+    if (isRightSwipe) prevSlide();
   };
 
   return (
     <main className="flex-1 bg-[#223a51] flex flex-col relative overflow-hidden text-slate-100">
-      {/* Imagem de fundo do hero com overlays de contraste */}
+      {/* Imagem de fundo do hero */}
       <div
         className="absolute top-0 w-full h-screen z-0 pointer-events-none"
         style={{ backgroundImage: 'url(/fundo.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}
       >
-        {/* Véu base uniforme — deixa a imagem aparecer dos dois lados */}
         <div className="absolute inset-0 bg-[#04122b]/55" />
-        {/* Extra escuro só no lado esquerdo para legibilidade do texto */}
         <div className="absolute inset-0 bg-linear-to-r from-[#04122b]/45 via-[#04122b]/20 to-transparent" />
-        {/* Fade suave para o fundo da página */}
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-[#223a51]" />
       </div>
 
@@ -122,27 +146,28 @@ export default function Home() {
           HERO
       ═══════════════════════════════════ */}
       <section className="relative z-10 w-full min-h-screen flex items-center overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-32 pb-20">
-          <div className="grid md:grid-cols-[68fr_32fr] gap-8 items-center">
+        <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-28 pb-10">
 
-            {/* Coluna esquerda — texto */}
+          {/* Título centralizado */}
+          <div className="flex flex-col items-center mb-8">
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="space-y-7 text-center md:text-left"
+              className="flex flex-col items-center text-center space-y-5 w-full max-w-3xl mx-auto"
             >
-              <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white">
+              <h1 className="font-serif text-5xl md:text-6xl xl:text-6xl leading-tight text-white text-center">
                 Seu Patrimônio Tratado com <br />
                 <span className="text-gold italic">Técnica, Estratégia</span> e Resultado
               </h1>
 
-              <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed">
+              <p className="max-w-xl text-slate-300 text-sm md:text-base leading-relaxed text-center">
                 Especialista em imóveis urbanos, áreas rurais, ativos florestais e avaliação mercadológica.
                 Segurança jurídica e técnica para seus investimentos.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row gap-4 pt-1">
                 <a
                   href="#destaques"
                   className="inline-flex items-center justify-center gap-2 bg-gold text-[#04122b] hover:bg-gold/90 transition-all px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest group shadow-[0_0_20px_rgba(197,160,89,0.3)]"
@@ -157,51 +182,60 @@ export default function Home() {
                   Laudo de Avaliação
                 </a>
               </div>
-
-              <div className="mt-10 md:mt-12 max-w-4xl mx-auto md:mx-0">
-                <SmartSearch />
-              </div>
             </motion.div>
-
-            {/* Coluna direita — foto */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex justify-end -mr-24 md:-mr-48"
-            >
-              <div style={{ position: 'relative', width: '100%', maxWidth: '260px', borderRadius: '28px', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' }}>
-                <img
-                  src="/foto_claudinei.png"
-                  alt="Claudiney W. Otto Junior — Corretor de Imóveis"
-                  style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
-                />
-                <div style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0,
-                  background: 'linear-gradient(to top, rgba(4,18,43,0.97) 0%, rgba(4,18,43,0.7) 55%, transparent 100%)',
-                  padding: '28px 16px 20px',
-                  textAlign: 'center',
-                }}>
-                  <p style={{ fontFamily: 'Georgia,serif', color: '#c5a059', fontSize: '15px', lineHeight: 1.3, margin: 0, textAlign: 'center' }}>
-                    Claudiney W. Otto Junior.
-                  </p>
-                  <p style={{ fontSize: '9px', color: 'rgba(197,160,89,0.8)', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '5px 0 0', textAlign: 'center' }}>
-                    CRECI 37016-PR • CNAI 45505
-                  </p>
-                  <p style={{ fontSize: '9px', color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase', margin: '3px 0 0', textAlign: 'center' }}>
-                    Corretor · Avaliador Imobiliário
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
           </div>
+
+          {/* Busca */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="max-w-4xl mx-auto mb-8"
+          >
+            <SmartSearch />
+          </motion.div>
+
+          {/* Cards de áreas */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            {areas.map((area) => {
+              const IconComponent = area.icon
+              return (
+                <motion.div
+                  key={area.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: area.id * 0.1 }}
+                  className={`group flex items-start gap-4 p-5 rounded-2xl border ${area.borderColor} bg-[#04122b]/60 backdrop-blur-md hover:bg-[#04122b]/80 transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+                >
+                  <div className={`w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br ${area.color} p-2.5 shadow-lg`}>
+                    <IconComponent className="w-full h-full text-white" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-white text-sm font-semibold group-hover:text-gold transition-colors duration-300 mb-1">
+                      {area.title}
+                    </h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      {area.description}
+                    </p>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </motion.div>
+
         </div>
       </section>
 
+      {/* ═══════════════════════════════════
+          PORTFÓLIO / DESTAQUES
+      ═══════════════════════════════════ */}
       <section id="destaques" className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-10 py-12 scroll-mt-20">
         <div className="bg-[#173a57]/80 backdrop-blur-xl rounded-4xl border border-slate-500/20 shadow-[0_40px_120px_rgba(15,23,42,0.18)] p-6 md:p-10">
-          {/* Cabeçalho da seção */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <p className="text-[10px] text-gold tracking-widest uppercase mb-3">Oportunidades Estratégicas</p>
@@ -210,7 +244,6 @@ export default function Home() {
               </h2>
             </div>
 
-            {/* Tabs + botão "Ver todos" lado a lado */}
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex gap-2 bg-[#04122b]/70 border border-slate-700/50 rounded-full px-3 py-2">
                 {['Venda', 'Locação'].map((aba) => (
@@ -238,7 +271,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Carrossel de imóveis em destaque */}
           <AnimatePresence mode="wait">
             {carregando ? (
               <motion.div
@@ -269,7 +301,6 @@ export default function Home() {
                 transition={{ duration: 0.4 }}
                 className="relative"
               >
-                {/* Container do carrossel */}
                 <div
                   className="relative overflow-hidden rounded-[28px]"
                   onTouchStart={handleTouchStart}
@@ -298,7 +329,6 @@ export default function Home() {
                           )}
                           <div className="absolute inset-0 bg-linear-to-t from-[#3f6f92] via-[#8ca7d0]/25 to-transparent" />
 
-                          {/* Badge destaque */}
                           <div className="absolute top-5 left-5 bg-linear-to-r from-[#2b5f86] via-[#4e7fab] to-[#8ba7cb] text-[#04122b] px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_10px_40px_rgba(29,60,96,0.18)]">
                             Destaque
                           </div>
@@ -350,10 +380,8 @@ export default function Home() {
                   </motion.div>
                 </div>
 
-                {/* Controles de navegação */}
                 {imoveisDestaque.length > 1 && (
                   <>
-                    {/* Botões anterior/próximo */}
                     <button
                       onClick={prevSlide}
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#04122b]/80 hover:bg-[#04122b] border border-slate-500/30 text-slate-300 hover:text-gold transition-all p-3 rounded-full shadow-lg backdrop-blur-sm z-10"
@@ -367,7 +395,6 @@ export default function Home() {
                       <ChevronRight size={20} />
                     </button>
 
-                    {/* Indicadores */}
                     <div className="flex justify-center gap-2 mt-6">
                       {imoveisDestaque.map((_, index) => (
                         <button
@@ -388,11 +415,6 @@ export default function Home() {
           </AnimatePresence>
         </div>
       </section>
-
-      {/* ═══════════════════════════════════
-          ÁREAS DE ATUAÇÃO
-      ═══════════════════════════════════ */}
-      <AreasAtuacao />
 
       {/* ═══════════════════════════════════
           AVALIAÇÃO IMOBILIÁRIA

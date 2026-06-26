@@ -1,5 +1,5 @@
 // components/Footer.tsx
-import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 import { LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
@@ -10,7 +10,10 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm font-medium">
           
           <div className="flex items-center gap-4">
-            <p className="text-center md:text-left text-slate-200">© 2026 - CLAUDINEY W. OTTO JUNIOR<br className="md:hidden"/> CRECI 37016-PR • CNAI 45505</p>
+            <p className="text-center md:text-left text-slate-200">
+              © 2026 - CLAUDINEY W. OTTO JUNIOR<br className="md:hidden"/> 
+              CRECI 37016-PR • CNAI 45505
+            </p>
             
             {/* Botão do Admin */}
             <Link 
@@ -40,18 +43,6 @@ export default function Footer() {
                 <FaInstagram size={20} />
               </Link>
             </div>
-            <div className="hidden md:block w-px h-5 bg-slate-400/30"></div>
-            <Link
-              href="https://www.linkedin.com/in/kaike-de-souza-755595281/"
-              target="_blank"
-              className="text-slate-200 hover:text-white transition-colors flex items-center gap-2 group"
-            >
-              Desenvolvido por{" "}
-              <span className="font-bold text-gold group-hover:underline flex items-center gap-1">
-                Kaike Souza <FaLinkedin size={14} />
-              </span>{" "}
-              - 2026
-            </Link>
           </div>
         </div>
       </div>
