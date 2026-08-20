@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import FotoCover from '@/components/FotoCover'
 
 const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja', 'Chácara']
 
@@ -307,10 +308,10 @@ export default function ImoveisCatalog({
               >
                 <div className="relative h-52 bg-[#2f4968] overflow-hidden">
                   {imovel.imagem_url ? (
-                    <img
+                    <FotoCover
                       src={imovel.imagem_url}
                       alt={imovel.titulo}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs uppercase tracking-widest">

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import FotoCover from '@/components/FotoCover';
 
 /* ── Design tokens — sem dependência de classes Tailwind externas ── */
 const C = {
@@ -78,7 +79,7 @@ export default function ImovelPage() {
     setImovel(data);
 
     const { data: fotos } = await supabase
-      .from('imovel_fotos').select('url').eq('imovel_id', id);
+      .from('imovel_fotos').select('url').eq('imovel_id', id).order('ordem', { ascending: true });
 
     const urls = Array.from(new Set<string>([
       ...(data.imagem_url ? [data.imagem_url] : []),
@@ -170,13 +171,7 @@ export default function ImovelPage() {
                 onClick={() => open(0)}
                 style={{ gridRow: galeria.length > 1 ? '1 / 3' : '1', position: 'relative', cursor: 'zoom-in', overflow: 'hidden', background: C.card, minHeight: galeria.length === 1 ? 420 : undefined }}
               >
-                <img
-                  src={f0}
-                  alt="Foto principal"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .5s ease' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.03)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
-                />
+                <FotoCover src={f0} alt="Foto principal" style={{ width: '100%', height: '100%' }} />
               </div>
 
               {/* Miniaturas (até 4) */}
@@ -188,12 +183,10 @@ export default function ImovelPage() {
                     onClick={() => open(i + 1)}
                     style={{ position: 'relative', cursor: 'zoom-in', overflow: 'hidden', background: C.card }}
                   >
-                    <img
+                    <FotoCover
                       src={url}
                       alt={`Foto ${i + 2}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .5s ease', filter: isLast ? 'brightness(0.35)' : undefined }}
-                      onMouseEnter={e => { if (!isLast) (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
+                      style={{ width: '100%', height: '100%', filter: isLast ? 'brightness(0.35)' : undefined }}
                     />
                     {/* Overlay "+X fotos" na última miniatura */}
                     {isLast && (

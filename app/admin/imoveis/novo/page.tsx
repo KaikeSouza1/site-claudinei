@@ -5,6 +5,7 @@ import { Save, Loader2, UploadCloud, X, Star, MapPin, ChevronLeft, ChevronRight,
 import Cropper, { Area } from 'react-easy-crop';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import FotoCover from '@/components/FotoCover';
 
 type GaleriaItem = {
   id: string;
@@ -227,12 +228,15 @@ export default function NovoImovel() {
 
       if (imovelError) throw imovelError;
 
-      const fotosParaGaleria = galeria.map(item => item.url).filter(url => url !== formData.imagem_url);
+      const fotosParaGaleria = galeria
+        .map((item, index) => ({ url: item.url, ordem: index }))
+        .filter(item => item.url !== formData.imagem_url);
 
       if (fotosParaGaleria.length > 0 && imovelSalvo) {
-        const fotosInsert = fotosParaGaleria.map(url => ({
+        const fotosInsert = fotosParaGaleria.map(({ url, ordem }) => ({
           imovel_id: imovelSalvo.id,
-          url: url
+          url,
+          ordem,
         }));
 
         const { error: fotosError } = await supabase.from('imovel_fotos').insert(fotosInsert);
@@ -289,7 +293,7 @@ export default function NovoImovel() {
                 const isCapa = item.url === formData.imagem_url;
                 return (
                   <div key={item.id} className={`relative aspect-square rounded-lg overflow-hidden border-2 group cursor-pointer ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`} onClick={() => definirComoCapa(item.url)}>
-                    <img src={item.url} alt={`Foto ${index}`} className="w-full h-full object-cover" />
+                    <FotoCover src={item.url} alt={`Foto ${index}`} className="w-full h-full" />
                     
                     {isCapa && (
                       <div className="absolute bottom-0 left-0 w-full bg-gold text-[#04122b] text-[9px] font-black uppercase tracking-widest text-center py-1">

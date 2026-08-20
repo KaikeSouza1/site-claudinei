@@ -2,9 +2,10 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { Save, Loader2, UploadCloud, X, Star, MapPin } from 'lucide-react';
+import { Save, Loader2, UploadCloud, X, Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
+import FotoCover from '@/components/FotoCover';
 
 export default function EditarImovel() {
   const router = useRouter();
@@ -63,11 +64,12 @@ export default function EditarImovel() {
           status: imovelData.status || 'disponivel',
         });
 
-        // 2. Puxa as fotos da galeria (tabela imovel_fotos)
+        // 2. Puxa as fotos da galeria (tabela imovel_fotos), respeitando a ordem salva
         const { data: fotosData } = await supabase
           .from('imovel_fotos')
           .select('url')
-          .eq('imovel_id', id);
+          .eq('imovel_id', id)
+          .order('ordem', { ascending: true });
 
         const fotosUrls = fotosData ? fotosData.map(f => f.url) : [];
         
@@ -119,6 +121,16 @@ export default function EditarImovel() {
     setFormData({ ...formData, imagem_url: url });
   };
 
+  const moverFoto = (index: number, delta: number) => {
+    setGaleria((prev) => {
+      const next = [...prev];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   const removerFoto = (urlParaRemover: string) => {
     setGaleria(galeria.filter((url) => url !== urlParaRemover));
     if (formData.imagem_url === urlParaRemover) {
@@ -152,11 +164,14 @@ export default function EditarImovel() {
       await supabase.from('imovel_fotos').delete().eq('imovel_id', id);
 
       // Salva a nova configuração da galeria (ignorando a foto que virou capa para não duplicar, caso queira)
-      const fotosParaGaleria = galeria.filter(url => url !== formData.imagem_url);
+      const fotosParaGaleria = galeria
+        .map((url, index) => ({ url, ordem: index }))
+        .filter(item => item.url !== formData.imagem_url);
       if (fotosParaGaleria.length > 0) {
-        const fotosInsert = fotosParaGaleria.map(url => ({
+        const fotosInsert = fotosParaGaleria.map(({ url, ordem }) => ({
           imovel_id: id,
-          url: url
+          url,
+          ordem,
         }));
         const { error: fotosError } = await supabase.from('imovel_fotos').insert(fotosInsert);
         if (fotosError) throw fotosError;
@@ -220,23 +235,35 @@ export default function EditarImovel() {
                 const isCapa = url === formData.imagem_url;
                 return (
                   <div key={index} className={`relative aspect-square rounded-lg overflow-hidden border-2 group cursor-pointer ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`} onClick={() => !isCapa && definirComoCapa(url)}>
-                    <img src={url} alt={`Foto ${index}`} className="w-full h-full object-cover bg-slate-800" />
-                    
+                    <FotoCover src={url} alt={`Foto ${index}`} className="w-full h-full bg-slate-800" />
+
                     {isCapa && (
                       <div className="absolute bottom-0 left-0 w-full bg-gold text-[#04122b] text-[9px] font-black uppercase tracking-widest text-center py-1">
                         Capa Atual
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                      {!isCapa && (
-                        <span className="text-gold flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider hover:scale-110 transition-transform">
-                          <Star size={14} className="fill-gold" /> Tornar Capa
-                        </span>
-                      )}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); removerFoto(url); }} className="text-red-400 flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider hover:scale-110 transition-transform">
-                        <X size={14} /> Remover
-                      </button>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-slate-300">#{index + 1}</span>
+                        {!isCapa && (
+                          <span className="text-gold flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider hover:scale-110 transition-transform">
+                            <Star size={14} className="fill-gold" /> Tornar Capa
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, -1); }} disabled={index === 0} className="rounded-xl bg-white/10 text-white disabled:opacity-40 px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, 1); }} disabled={index === galeria.length - 1} className="rounded-xl bg-white/10 text-white disabled:opacity-40 px-2 py-2 text-[10px] uppercase tracking-widest">
+                          <ChevronRight size={14} />
+                        </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); removerFoto(url); }} className="col-span-2 rounded-xl bg-red-500/10 text-red-300 px-2 py-2 text-[10px] uppercase tracking-widest flex items-center justify-center gap-1">
+                          <X size={14} /> Remover
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
