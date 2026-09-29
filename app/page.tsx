@@ -145,7 +145,7 @@ export default function Home() {
       {/* ═══════════════════════════════════
           HERO
       ═══════════════════════════════════ */}
-      <section className="relative z-10 w-full min-h-screen flex items-center overflow-hidden">
+      <section className="relative z-20 w-full min-h-screen flex items-center overflow-hidden">
         <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-28 pb-10">
 
           {/* Título centralizado */}
@@ -190,7 +190,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="max-w-4xl mx-auto mb-8"
+            className="relative z-30 max-w-4xl mx-auto mb-8"
           >
             <SmartSearch />
           </motion.div>
