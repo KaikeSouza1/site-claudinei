@@ -145,7 +145,7 @@ export default function Home() {
       {/* ═══════════════════════════════════
           HERO
       ═══════════════════════════════════ */}
-      <section className="relative z-20 w-full min-h-screen flex items-center overflow-hidden">
+      <section className="relative z-20 w-full min-h-screen flex items-center">
         <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pt-28 pb-10">
 
           {/* Título centralizado */}

@@ -94,12 +94,13 @@ export default function SmartSearch() {
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setIsDropdownOpen(false)} />
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 w-full mt-2 bg-[#1a2d3d] border border-slate-500/30 rounded-2xl shadow-2xl z-40 overflow-hidden"
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-[#0b2140] border border-slate-500/30 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] z-40 overflow-hidden"
                   >
-                    <div className="p-2 grid grid-cols-1 gap-1">
+                    <div className="p-1.5 grid grid-cols-1 gap-0.5 max-h-72 overflow-y-auto">
                       {(categoria === 'urbano' ? tiposUrbano : categoria === 'rural' ? tiposRural : tiposAtivos).map((t) => (
                         <button
                           key={t}
@@ -108,7 +109,9 @@ export default function SmartSearch() {
                             setTipo(t)
                             setIsDropdownOpen(false)
                           }}
-                          className="w-full text-left px-4 py-3 rounded-xl text-sm text-slate-300 hover:bg-gold hover:text-[#04122b] transition-all"
+                          className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors ${
+                            tipo === t ? 'bg-gold/15 text-gold' : 'text-slate-300 hover:bg-gold hover:text-[#04122b]'
+                          }`}
                         >
                           {t}
                         </button>
@@ -119,7 +122,7 @@ export default function SmartSearch() {
                           setTipo('')
                           setIsDropdownOpen(false)
                         }}
-                        className="w-full text-left px-4 py-3 rounded-xl text-sm text-gold border-t border-slate-700 mt-1 hover:bg-slate-700/50"
+                        className="w-full text-left px-4 py-2.5 rounded-xl text-sm text-gold border-t border-slate-700/60 mt-1 hover:bg-slate-700/50"
                       >
                         Limpar Filtro
                       </button>
