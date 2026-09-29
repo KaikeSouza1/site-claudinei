@@ -4,35 +4,97 @@ import type { PoolClient } from 'pg';
 
 export const CAMPOS_IMOVEL = [
   'codigo', 'titulo', 'descricao', 'preco', 'tipo', 'finalidade',
-  'cidade', 'bairro', 'endereco', 'latitude', 'longitude',
-  'quartos', 'banheiros', 'vagas', 'area', 'imagem_url',
+  'cep', 'estado', 'cidade', 'bairro', 'endereco', 'numero', 'complemento', 'latitude', 'longitude',
+  'area_construida', 'area_terreno', 'quartos', 'suites', 'banheiros', 'vagas', 'pavimentos',
+  'caracteristicas', 'imagem_url', 'video_url',
+  'aceita_financiamento', 'aceita_fgts', 'aceita_permuta', 'aceita_negociacao',
+  'documentacao_regular', 'ocupacao', 'disponibilidade_visitas',
   'destaque', 'ativo', 'status',
 ] as const;
 
 // Colunas que o site público pode ver. Dados internos (proprietário, matrícula,
-// comissão...) nunca devem entrar aqui.
+// comissão...) ficam em imovel_interno e nunca devem entrar aqui.
 export const COLUNAS_PUBLICAS = [
   'id', 'codigo', 'titulo', 'descricao', 'preco', 'tipo', 'finalidade',
-  'cidade', 'bairro', 'endereco', 'latitude', 'longitude',
-  'quartos', 'banheiros', 'vagas', 'area', 'imagem_url',
+  'cep', 'estado', 'cidade', 'bairro', 'endereco', 'numero', 'complemento', 'latitude', 'longitude',
+  'area', 'area_construida', 'area_terreno', 'quartos', 'suites', 'banheiros', 'vagas', 'pavimentos',
+  'caracteristicas', 'imagem_url', 'video_url',
+  'aceita_financiamento', 'aceita_fgts', 'aceita_permuta', 'aceita_negociacao',
+  'documentacao_regular', 'ocupacao', 'disponibilidade_visitas',
   'destaque', 'ativo', 'status', 'criado_em',
 ].join(', ');
 
-const INTEIROS =['quartos', 'banheiros', 'vagas'];
-const OPCIONAIS_NUMERICOS = ['latitude', 'longitude', 'area'];
+export const CAMPOS_INTERNOS = [
+  'matricula', 'inscricao_imobiliaria',
+  'proprietario_nome', 'proprietario_telefone', 'proprietario_email', 'proprietario_cpf',
+  'area_registrada', 'area_averbada', 'iptu_valor', 'iptu_situacao',
+  'possui_financiamento', 'onus', 'financiamento_bancario',
+  'comissao_percentual', 'comissao_valor',
+  'autorizacao_venda', 'autorizacao_validade', 'observacoes',
+] as const;
+
+const INTEIROS = ['quartos', 'suites', 'banheiros', 'vagas', 'pavimentos'];
+const NUMERICOS_OPCIONAIS = [
+  'latitude', 'longitude', 'area_construida', 'area_terreno',
+  'area_registrada', 'area_averbada', 'iptu_valor', 'comissao_percentual', 'comissao_valor',
+];
+const BOOLEANOS = [
+  'aceita_financiamento', 'aceita_fgts', 'aceita_permuta', 'aceita_negociacao',
+  'documentacao_regular', 'destaque', 'ativo',
+  'possui_financiamento', 'financiamento_bancario', 'autorizacao_venda',
+];
+
+function normalizarValor(campo: string, v: unknown) {
+  if (campo === 'preco') return Number(v);
+  if (INTEIROS.includes(campo)) return v === '' || v == null ? 0 : Math.trunc(Number(v));
+  if (NUMERICOS_OPCIONAIS.includes(campo)) return v === '' || v == null ? null : Number(v);
+  if (BOOLEANOS.includes(campo)) return v === true || v === 'true';
+  if (campo === 'caracteristicas') return Array.isArray(v) ? v.map(String) : [];
+  if (typeof v === 'string') return v.trim() === '' ? null : v.trim();
+  return v ?? null;
+}
 
 /** Converte os valores vindos do formulário (strings) para o tipo das colunas. */
 export function normalizarImovel(body: Record<string, unknown>) {
   const dados: Record<string, unknown> = {};
   for (const campo of CAMPOS_IMOVEL) {
-    if (!(campo in body)) continue;
-    const v = body[campo];
-    if (campo === 'preco') dados[campo] = Number(v);
-    else if (INTEIROS.includes(campo)) dados[campo] = v === '' || v == null ? 0 : Number(v);
-    else if (OPCIONAIS_NUMERICOS.includes(campo)) dados[campo] = v === '' || v == null ? null : Number(v);
-    else dados[campo] = v;
+    if (campo in body) dados[campo] = normalizarValor(campo, body[campo]);
+  }
+  // Colunas obrigatórias continuam string vazia em vez de null
+  for (const campo of ['titulo', 'tipo', 'finalidade', 'cidade']) {
+    if (campo in dados && dados[campo] == null) dados[campo] = '';
+  }
+  // Código vazio: o banco gera automaticamente no INSERT (trigger imovel_codigo_auto)
+  if ('codigo' in dados && dados.codigo == null) delete dados.codigo;
+  // "area" antiga continua preenchida para os cards e filtros que já a usam
+  if ('area_construida' in dados || 'area_terreno' in dados) {
+    const a = (dados.area_construida ?? dados.area_terreno) as number | null;
+    dados.area = a == null ? null : Math.round(a);
   }
   return dados;
+}
+
+export function normalizarInterno(body: Record<string, unknown>) {
+  const dados: Record<string, unknown> = {};
+  for (const campo of CAMPOS_INTERNOS) {
+    if (campo in body) dados[campo] = normalizarValor(campo, body[campo]);
+  }
+  return dados;
+}
+
+/** Cria ou atualiza os dados internos do imóvel. */
+export async function salvarInterno(client: PoolClient, imovelId: number | string, interno: Record<string, unknown>) {
+  const dados = normalizarInterno(interno);
+  const cols = Object.keys(dados);
+  if (cols.length === 0) return;
+
+  await client.query(
+    `INSERT INTO imovel_interno (imovel_id, ${cols.join(', ')})
+     VALUES ($1, ${cols.map((_, i) => `$${i + 2}`).join(', ')})
+     ON CONFLICT (imovel_id) DO UPDATE SET
+       ${cols.map((c) => `${c} = EXCLUDED.${c}`).join(', ')}, atualizado_em = now()`,
+    [imovelId, ...cols.map((c) => dados[c])],
+  );
 }
 
 /**

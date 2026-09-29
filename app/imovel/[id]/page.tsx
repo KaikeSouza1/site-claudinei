@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, MapPin, Bed, Bath, Car, Maximize,
   Star, HomeIcon, ChevronLeft,
-  ChevronRight, X, Heart, Share2, Grid3x3
+  ChevronRight, X, Heart, Share2, Grid3x3,
+  BedDouble, Layers, Trees, Check, ShieldCheck, Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 import FotoCover from '@/components/FotoCover';
+import { videoEmbedUrl } from '@/lib/imovel-opcoes';
 
 /* ── Design tokens — sem dependência de classes Tailwind externas ── */
 const C = {
@@ -32,6 +34,16 @@ function Label({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+function Selo({ children, icon }: { children: React.ReactNode; icon: React.ReactNode }) {
+  return (
+    <span style={{ border: '1px solid rgba(34,197,94,0.35)', background: 'rgba(34,197,94,0.08)', color: '#86efac', padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', gap: 5 }}>
+      {icon}{children}
+    </span>
+  );
+}
+
+const fmtArea = (v: number) => `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(v)}m²`;
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string | number; label: string }) {
   return (
@@ -114,6 +126,26 @@ export default function ImovelPage() {
   const side = rest.slice(0, 4);            // até 4 miniaturas
   const extra = galeria.length - 5;        // fotos além das 5 exibidas
   const codigo = imovel.codigo || `IMV${String(imovel.id ?? '').substring(0, 6).toUpperCase()}`;
+  const isLocacao = /loca|alug/i.test(imovel.finalidade ?? '');
+  const video = videoEmbedUrl(imovel.video_url);
+  const caracteristicas: string[] = imovel.caracteristicas ?? [];
+  const areaConstruida = Number(imovel.area_construida) || (!imovel.area_terreno ? Number(imovel.area) || 0 : 0);
+  const areaTerreno = Number(imovel.area_terreno) || 0;
+  const rua = [imovel.endereco, imovel.numero].filter(Boolean).join(', ');
+  const cidadeUf = [imovel.cidade, imovel.estado].filter(Boolean).join('/');
+  const enderecoCompleto = [rua, imovel.bairro, cidadeUf].filter(Boolean).join(' — ');
+  const mapaQuery = imovel.latitude && imovel.longitude
+    ? `${imovel.latitude},${imovel.longitude}`
+    : [rua, imovel.bairro, imovel.cidade, imovel.estado, imovel.cep].filter(Boolean).join(', ');
+  const mapaUrl = imovel.cidade ? `https://maps.google.com/maps?q=${encodeURIComponent(mapaQuery)}&z=15&output=embed` : '';
+  const condicoes = [
+    imovel.aceita_financiamento && 'Aceita financiamento',
+    imovel.aceita_fgts && 'Aceita FGTS',
+    imovel.aceita_permuta && 'Aceita permuta',
+    imovel.aceita_negociacao && 'Valor negociável',
+    imovel.ocupacao === 'desocupado' && 'Imóvel desocupado',
+    imovel.ocupacao === 'ocupado' && 'Imóvel ocupado',
+  ].filter(Boolean) as string[];
 
   return (
     <main style={{ background: C.bg, minHeight: '100vh', overflowX: 'hidden', paddingTop: 96 }}>
@@ -129,6 +161,8 @@ export default function ImovelPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
               <span style={{ background: C.gold, color: C.card, padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>{imovel.finalidade}</span>
               <span style={{ border: `1px solid #1e3a5f`, color: '#64748b', padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>{imovel.tipo}</span>
+              {imovel.documentacao_regular && <Selo icon={<ShieldCheck size={10} />}>Documentação regular</Selo>}
+              {imovel.aceita_financiamento && <Selo icon={<Landmark size={10} />}>Aceita financiamento</Selo>}
               {imovel.destaque && (
                 <span style={{ border: `1px solid ${C.b}`, background: 'rgba(201,168,76,0.06)', color: C.gold, padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Star size={9} fill={C.gold} color={C.gold} /> Destaque
@@ -140,7 +174,7 @@ export default function ImovelPage() {
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#475569', fontSize: 13 }}>
               <MapPin size={13} color={C.gold} style={{ flexShrink: 0 }} />
-              <span>{imovel.endereco}{imovel.bairro ? `, ${imovel.bairro}` : ''} — {imovel.cidade}</span>
+              <span>{enderecoCompleto}</span>
             </div>
           </div>
           <div style={{ textAlign: 'right' as const }}>
@@ -148,7 +182,7 @@ export default function ImovelPage() {
             <span style={{ fontFamily: 'Georgia,"Times New Roman",serif', fontSize: 'clamp(26px, 3vw, 38px)', color: C.gold, lineHeight: 1, letterSpacing: '-0.01em' }}>
               {fmt(imovel.preco)}
             </span>
-            {imovel.finalidade === 'Locacao' && (
+            {isLocacao && (
               <span style={{ color: '#475569', fontSize: 14, marginLeft: 6 }}>/mês</span>
             )}
           </div>
@@ -218,12 +252,46 @@ export default function ImovelPage() {
             <div style={{ paddingBottom: 36, borderBottom: `1px solid ${C.bs}`, marginBottom: 36 }}>
               <Label>Visão Geral</Label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10 }}>
-                {imovel.quartos   > 0 && <Stat icon={<Bed      size={20} color={C.gold} />} value={imovel.quartos}      label="Quartos"   />}
-                {imovel.banheiros > 0 && <Stat icon={<Bath     size={20} color={C.gold} />} value={imovel.banheiros}    label="Banheiros" />}
-                {imovel.vagas     > 0 && <Stat icon={<Car      size={20} color={C.gold} />} value={imovel.vagas}        label="Vagas"     />}
-                {imovel.area      > 0 && <Stat icon={<Maximize size={20} color={C.gold} />} value={`${imovel.area}m²`} label="Área"      />}
+                {imovel.quartos    > 0 && <Stat icon={<Bed       size={20} color={C.gold} />} value={imovel.quartos}    label="Quartos"    />}
+                {imovel.suites     > 0 && <Stat icon={<BedDouble size={20} color={C.gold} />} value={imovel.suites}     label="Suítes"     />}
+                {imovel.banheiros  > 0 && <Stat icon={<Bath      size={20} color={C.gold} />} value={imovel.banheiros}  label="Banheiros"  />}
+                {imovel.vagas      > 0 && <Stat icon={<Car       size={20} color={C.gold} />} value={imovel.vagas}      label="Vagas"      />}
+                {imovel.pavimentos > 0 && <Stat icon={<Layers    size={20} color={C.gold} />} value={imovel.pavimentos} label="Pavimentos" />}
+                {areaConstruida    > 0 && <Stat icon={<Maximize  size={20} color={C.gold} />} value={fmtArea(areaConstruida)} label="Área construída" />}
+                {areaTerreno       > 0 && <Stat icon={<Trees     size={20} color={C.gold} />} value={fmtArea(areaTerreno)}    label="Terreno"         />}
               </div>
             </div>
+
+            {/* Características */}
+            {caracteristicas.length > 0 && (
+              <div style={{ paddingBottom: 36, borderBottom: `1px solid ${C.bs}`, marginBottom: 36 }}>
+                <Label>Características</Label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px 20px' }}>
+                  {caracteristicas.map((c) => (
+                    <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#cbd5e1', fontSize: 14 }}>
+                      <Check size={15} color={C.gold} style={{ flexShrink: 0 }} /> {c}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Condições comerciais */}
+            {(condicoes.length > 0 || imovel.disponibilidade_visitas) && (
+              <div style={{ paddingBottom: 36, borderBottom: `1px solid ${C.bs}`, marginBottom: 36 }}>
+                <Label>Condições</Label>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+                  {condicoes.map((c) => (
+                    <span key={c} style={{ border: `1px solid ${C.b}`, color: '#e2e8f0', padding: '8px 14px', fontSize: 13 }}>{c}</span>
+                  ))}
+                </div>
+                {imovel.disponibilidade_visitas && (
+                  <p style={{ color: '#94a3b8', fontSize: 14, margin: '16px 0 0' }}>
+                    <span style={{ color: C.gold }}>Visitas:</span> {imovel.disponibilidade_visitas}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Descrição */}
             {imovel.descricao && (
@@ -232,6 +300,30 @@ export default function ImovelPage() {
                 <p style={{ color: '#94a3b8', lineHeight: 1.9, fontSize: 15, margin: 0, fontWeight: 300, whiteSpace: 'pre-line' as const }}>
                   {imovel.descricao}
                 </p>
+              </div>
+            )}
+
+            {/* Vídeo */}
+            {video && (
+              <div style={{ marginTop: 36, paddingTop: 36, borderTop: `1px solid ${C.bs}` }}>
+                <Label>Vídeo</Label>
+                <div style={{ position: 'relative', aspectRatio: '16 / 9', background: C.card, border: `1px solid ${C.bs}` }}>
+                  <iframe src={video} title="Vídeo do imóvel" allow="encrypted-media; picture-in-picture" allowFullScreen style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
+                </div>
+              </div>
+            )}
+
+            {/* Localização */}
+            {mapaUrl && (
+              <div style={{ marginTop: 36, paddingTop: 36, borderTop: `1px solid ${C.bs}` }}>
+                <Label>Localização</Label>
+                <p style={{ color: '#94a3b8', fontSize: 14, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <MapPin size={14} color={C.gold} style={{ flexShrink: 0 }} />
+                  {[enderecoCompleto, imovel.cep].filter(Boolean).join(' — ')}
+                </p>
+                <div style={{ position: 'relative', height: 360, background: C.card, border: `1px solid ${C.bs}` }}>
+                  <iframe src={mapaUrl} title="Mapa do imóvel" loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
+                </div>
               </div>
             )}
           </motion.div>
@@ -288,6 +380,8 @@ export default function ImovelPage() {
                   <div style={{ background: C.bg, border: `1px solid rgba(148,163,184,0.07)`, padding: '13px 15px' }}>
                     {[
                       { k: 'Código', v: codigo, mono: true },
+                      { k: 'Tipo', v: imovel.tipo, mono: false },
+                      ...(imovel.documentacao_regular ? [{ k: 'Documentação', v: 'Regular', mono: false }] : []),
                     ].map((row, i, arr) => (
                       <div key={row.k}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>

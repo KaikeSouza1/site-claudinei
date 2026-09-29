@@ -19,14 +19,25 @@ function gerarNomeArquivo(): string {
   return `imovel-${timestamp}-${random}.webp`;
 }
 
-async function otimizarComMarcaDagua(buffer: Buffer): Promise<Buffer> {
+// Limite de saída em 3:2 (padrão das fotos do site). Fotos menores não são ampliadas.
+const MAX_LARGURA = 1500;
+const MAX_ALTURA = 1000;
+
+async function otimizarComMarcaDagua(buffer: Buffer, aplicarMarca = true): Promise<Buffer> {
   const logoPath = path.join(process.cwd(), "public", "logo_nova.png");
-  const imagem = sharp(buffer);
-  
+
+  // Redimensiona primeiro: a marca d'água é calculada sobre o tamanho final.
+  // rotate() aplica a orientação EXIF (fotos de celular não ficam deitadas).
+  const redimensionada = await sharp(buffer)
+    .rotate()
+    .resize({ width: MAX_LARGURA, height: MAX_ALTURA, fit: "inside", withoutEnlargement: true })
+    .toBuffer();
+  const imagem = sharp(redimensionada);
+
   // Verifica se a logo existe na pasta public. Se não existir, apenas otimiza.
-  if (fs.existsSync(logoPath)) {
+  if (aplicarMarca && fs.existsSync(logoPath)) {
     const logoBuffer = fs.readFileSync(logoPath);
-    const { width = 1280, height = 960 } = await imagem.metadata();
+    const { width = MAX_LARGURA, height = MAX_ALTURA } = await imagem.metadata();
 
     // Redimensiona o logo para 25% da largura
     const logoWidth = Math.round(width * 0.25);
@@ -59,7 +70,6 @@ async function otimizarComMarcaDagua(buffer: Buffer): Promise<Buffer> {
     const top = Math.round((height - lh) / 2);
 
     return imagem
-      .resize({ width: 1280, height: 960, fit: "inside", withoutEnlargement: true })
       .composite([{ input: logoComOpacidade, left, top, blend: "over" }])
       .webp({ quality: 82, effort: 4 })
       .toBuffer();
@@ -67,7 +77,6 @@ async function otimizarComMarcaDagua(buffer: Buffer): Promise<Buffer> {
 
   // Se NÃO achar a logo, apenas redimensiona e converte pra WebP
   return imagem
-    .resize({ width: 1280, height: 960, fit: "inside", withoutEnlargement: true })
     .webp({ quality: 82, effort: 4 })
     .toBuffer();
 }
@@ -76,6 +85,8 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const files = formData.getAll("file") as File[];
+    // Recorte de uma foto que já tem marca d'água: não aplica de novo
+    const aplicarMarca = formData.get("marca") !== "0";
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 });
@@ -93,7 +104,7 @@ export async function POST(request: Request) {
       const bufferOriginal = Buffer.from(arrayBuffer);
 
       // Passa pela nossa função (com ou sem marca d'água)
-      const bufferFinal = await otimizarComMarcaDagua(bufferOriginal);
+      const bufferFinal = await otimizarComMarcaDagua(bufferOriginal, aplicarMarca);
       const fileName = gerarNomeArquivo();
 
       await R2.send(

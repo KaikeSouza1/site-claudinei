@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, MapPin, Building2, Trees, Leaf, ChevronDown, Filter } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-const tiposUrbano = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Industrial']
+const tiposUrbano = ['Casa', 'Sobrado', 'Apartamento', 'Kitnet', 'Terreno', 'Comercial']
 const tiposRural = ['Fazenda', 'Sítio', 'Chácara', 'Área de Plantio', 'Pecuária']
 const tiposAtivos = ['Reflorestamento', 'Reserva Legal', 'Crédito de Carbono']
 

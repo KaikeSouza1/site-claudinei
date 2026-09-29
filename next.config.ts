@@ -18,9 +18,12 @@ const CSP = [
   "font-src 'self' data:",
   [
     "connect-src 'self'",
+    'https://viacep.com.br',
     'https://api.asaas.com',
     'https://api-sandbox.asaas.com',
   ].join(' '),
+  // Mapa do Google e players de vídeo embutidos
+  "frame-src https://maps.google.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

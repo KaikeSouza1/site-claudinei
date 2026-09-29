@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, withTransaction } from '@/lib/db';
-import { normalizarImovel, salvarGaleria } from '@/lib/imoveis';
+import { normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,10 +11,16 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const imovel = await queryOne('SELECT * FROM imoveis WHERE id = $1', [id]);
     if (!imovel) return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 });
 
-    const fotos = await query<{ url: string }>(
-      'SELECT url FROM imovel_fotos WHERE imovel_id = $1 ORDER BY ordem', [id],
-    );
-    return NextResponse.json({ ...imovel, fotos: fotos.map((f) => f.url) });
+    const [fotos, interno, documentos] = await Promise.all([
+      query<{ url: string }>('SELECT url FROM imovel_fotos WHERE imovel_id = $1 ORDER BY ordem', [id]),
+      queryOne('SELECT * FROM imovel_interno WHERE imovel_id = $1', [id]),
+      query(
+        `SELECT id, nome, categoria, mime, tamanho, criado_em
+         FROM imovel_documentos WHERE imovel_id = $1 ORDER BY criado_em DESC`,
+        [id],
+      ),
+    ]);
+    return NextResponse.json({ ...imovel, fotos: fotos.map((f) => f.url), interno, documentos });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
@@ -40,6 +46,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
       if (Array.isArray(body.galeria)) {
         await salvarGaleria(client, id, body.galeria, atualizado.imagem_url ?? '');
+      }
+      if (body.interno && typeof body.interno === 'object') {
+        await salvarInterno(client, id, body.interno);
       }
       return atualizado;
     });

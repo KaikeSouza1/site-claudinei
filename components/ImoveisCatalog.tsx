@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
 import FotoCover from '@/components/FotoCover'
+import { TIPOS_IMOVEL } from '@/lib/imovel-opcoes'
 
-const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja', 'Chácara']
+const tipos = [...TIPOS_IMOVEL]
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)

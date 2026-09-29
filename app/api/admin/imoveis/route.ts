@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, withTransaction } from '@/lib/db';
-import { normalizarImovel, salvarGaleria } from '@/lib/imoveis';
+import { normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       );
       const criado = rows[0];
       await salvarGaleria(client, criado.id, Array.isArray(body.galeria) ? body.galeria : [], criado.imagem_url ?? '');
+      if (body.interno && typeof body.interno === 'object') await salvarInterno(client, criado.id, body.interno);
       return criado;
     });
     return NextResponse.json(imovel, { status: 201 });
