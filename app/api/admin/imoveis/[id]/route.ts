@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, withTransaction } from '@/lib/db';
-import { normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
+import { completarCoordenadas, normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -30,6 +30,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
   const dados = normalizarImovel(body);
+  await completarCoordenadas(dados);
 
   try {
     const imovel = await withTransaction(async (client) => {

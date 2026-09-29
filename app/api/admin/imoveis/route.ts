@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, withTransaction } from '@/lib/db';
-import { normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
+import { completarCoordenadas, normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const dados = normalizarImovel(body);
+  await completarCoordenadas(dados);
 
   if (!dados.titulo || !dados.cidade || Number.isNaN(dados.preco)) {
     return NextResponse.json({ error: 'titulo, cidade e preco são obrigatórios' }, { status: 400 });

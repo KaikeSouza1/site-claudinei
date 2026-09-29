@@ -8,6 +8,7 @@ import {
   Lock, FileText, Trash2, Plus, Video, AlertTriangle, Search,
 } from 'lucide-react';
 import FotoCover from '@/components/FotoCover';
+import MapaImovel from '@/components/MapaImovel';
 import { TIPOS_IMOVEL, CARACTERISTICAS, CATEGORIAS_DOCUMENTO, videoEmbedUrl } from '@/lib/imovel-opcoes';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -113,6 +114,8 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
   const [galeria, setGaleria] = useState<GaleriaItem[]>([]);
   const [uploadingGaleria, setUploadingGaleria] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [localizando, setLocalizando] = useState(false);
+  const [precisaoMapa, setPrecisaoMapa] = useState('');
   const [novaCaracteristica, setNovaCaracteristica] = useState('');
 
   const [documentos, setDocumentos] = useState<Documento[]>([]);
@@ -273,14 +276,16 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
       if (d.erro) {
         alert('CEP não encontrado.');
       } else {
-        setForm((f) => ({
-          ...f,
+        const novo = {
+          ...form,
           cep: `${cep.slice(0, 5)}-${cep.slice(5)}`,
-          endereco: d.logradouro || f.endereco,
-          bairro: d.bairro || f.bairro,
-          cidade: d.localidade || f.cidade,
-          estado: d.uf || f.estado,
-        }));
+          endereco: d.logradouro || form.endereco,
+          bairro: d.bairro || form.bairro,
+          cidade: d.localidade || form.cidade,
+          estado: d.uf || form.estado,
+        };
+        setForm(novo);
+        localizar(novo); // já posiciona o mapa no endereço do CEP
       }
     } catch {
       alert('Não foi possível consultar o CEP agora.');
@@ -288,15 +293,32 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
     setBuscandoCep(false);
   };
 
-  const enderecoMapa = [
-    [form.endereco, form.numero].filter(Boolean).join(', '),
-    form.bairro, form.cidade, form.estado, form.cep,
-  ].filter(Boolean).join(' - ');
-  const mapaUrl = form.latitude && form.longitude
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(`${form.latitude},${form.longitude}`)}&z=16&output=embed`
-    : form.cidade
-      ? `https://maps.google.com/maps?q=${encodeURIComponent(enderecoMapa)}&z=16&output=embed`
-      : '';
+  // ── Mapa (OpenStreetMap) ──
+  const localizar = async (endereco = form) => {
+    if (!endereco.cidade) return alert('Preencha ao menos a cidade.');
+    setLocalizando(true);
+    try {
+      const res = await fetch('/api/admin/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endereco: endereco.endereco, numero: endereco.numero, bairro: endereco.bairro,
+          cidade: endereco.cidade, estado: endereco.estado, cep: endereco.cep,
+        }),
+      });
+      const r = await res.json();
+      if (!res.ok) throw new Error(r.error);
+      setForm((f) => ({ ...f, latitude: r.lat.toFixed(7), longitude: r.lng.toFixed(7) }));
+      setPrecisaoMapa(r.precisao === 'endereço' ? '' : `Localizado pelo(a) ${r.precisao}. Arraste o marcador até o ponto exato.`);
+    } catch (err) {
+      alert((err as Error).message || 'Não foi possível localizar o endereço.');
+    }
+    setLocalizando(false);
+  };
+
+  const lat = parseFloat(form.latitude);
+  const lng = parseFloat(form.longitude);
+  const temCoordenadas = Number.isFinite(lat) && Number.isFinite(lng);
 
   // ── Características ──
   const alternarCaracteristica = (c: string) =>
@@ -553,14 +575,24 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
               <Campo label="Longitude (opcional)" className="col-span-3">
                 <input type="text" value={form.longitude} onChange={(e) => set('longitude', e.target.value)} placeholder="-51.085..." className={inputCls} />
               </Campo>
-              <p className="col-span-6 text-[11px] text-slate-500">
-                Sem latitude/longitude, o mapa usa o endereço. Para o ponto exato: no Google Maps, clique com o botão direito no local e copie as coordenadas.
-              </p>
+              <div className="col-span-6 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={() => localizar()} disabled={localizando}
+                  className="flex items-center gap-2 rounded-lg border border-gold/50 px-4 py-2 text-xs font-bold uppercase text-gold hover:bg-gold/10 disabled:opacity-50">
+                  {localizando ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+                  Localizar pelo endereço
+                </button>
+                <p className="text-[11px] text-slate-500 flex-1 min-w-48">
+                  {precisaoMapa || 'Clique no mapa ou arraste o marcador para ajustar o ponto exato.'}
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg overflow-hidden border border-slate-600 min-h-72 bg-[#1d2b3c]">
-              {mapaUrl
-                ? <iframe src={mapaUrl} title="Mapa" className="w-full h-full min-h-72" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-                : <div className="h-full min-h-72 flex items-center justify-center text-sm text-slate-500">Preencha o endereço para ver o mapa.</div>}
+            <div className="rounded-lg overflow-hidden border border-slate-600 min-h-80 bg-[#1d2b3c]">
+              {temCoordenadas
+                ? <MapaImovel lat={lat} lng={lng} className="w-full h-80 lg:h-full lg:min-h-80"
+                    onChange={(la, ln) => { setForm((f) => ({ ...f, latitude: la.toFixed(7), longitude: ln.toFixed(7) })); setPrecisaoMapa(''); }} />
+                : <div className="h-full min-h-80 flex items-center justify-center text-center px-6 text-sm text-slate-500">
+                    Preencha o CEP ou clique em &quot;Localizar pelo endereço&quot; para ver o mapa.<br />Ao salvar sem localizar, o sistema localiza sozinho.
+                  </div>}
             </div>
           </div>
         </Secao>

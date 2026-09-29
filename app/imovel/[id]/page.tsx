@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import FotoCover from '@/components/FotoCover';
 import { videoEmbedUrl } from '@/lib/imovel-opcoes';
+import MapaImovel from '@/components/MapaImovel';
 
 /* ── Design tokens — sem dependência de classes Tailwind externas ── */
 const C = {
@@ -125,6 +126,9 @@ export default function ImovelPage() {
   const [f0, ...rest] = galeria;
   const side = rest.slice(0, 4);            // até 4 miniaturas
   const extra = galeria.length - 5;        // fotos além das 5 exibidas
+  // Foto principal à esquerda + miniaturas em 2 linhas à direita (até 2x2)
+  const gradeColunas = galeria.length === 1 ? '1fr' : galeria.length === 2 ? '1fr 1fr' : galeria.length === 3 ? '2fr 1fr' : '2fr 1fr 1fr';
+  const gradeLinhas  = galeria.length === 1 ? 'auto' : galeria.length === 2 ? '480px' : '240px 240px';
   const codigo = imovel.codigo || `IMV${String(imovel.id ?? '').substring(0, 6).toUpperCase()}`;
   const isLocacao = /loca|alug/i.test(imovel.finalidade ?? '');
   const video = videoEmbedUrl(imovel.video_url);
@@ -134,10 +138,9 @@ export default function ImovelPage() {
   const rua = [imovel.endereco, imovel.numero].filter(Boolean).join(', ');
   const cidadeUf = [imovel.cidade, imovel.estado].filter(Boolean).join('/');
   const enderecoCompleto = [rua, imovel.bairro, cidadeUf].filter(Boolean).join(' — ');
-  const mapaQuery = imovel.latitude && imovel.longitude
-    ? `${imovel.latitude},${imovel.longitude}`
-    : [rua, imovel.bairro, imovel.cidade, imovel.estado, imovel.cep].filter(Boolean).join(', ');
-  const mapaUrl = imovel.cidade ? `https://maps.google.com/maps?q=${encodeURIComponent(mapaQuery)}&z=15&output=embed` : '';
+  const lat = Number(imovel.latitude);
+  const lng = Number(imovel.longitude);
+  const temMapa = imovel.latitude != null && imovel.longitude != null && Number.isFinite(lat) && Number.isFinite(lng);
   const condicoes = [
     imovel.aceita_financiamento && 'Aceita financiamento',
     imovel.aceita_fgts && 'Aceita FGTS',
@@ -194,12 +197,12 @@ export default function ImovelPage() {
         {galeria.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             {/* Desktop: foto grande + 2x2 */}
-            <div style={{ display: 'grid', gridTemplateColumns: galeria.length === 1 ? '1fr' : '1fr 1fr', gridTemplateRows: galeria.length === 1 ? 'auto' : '240px 240px', gap: 4, borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: gradeColunas, gridTemplateRows: gradeLinhas, gap: 4, borderRadius: 2, overflow: 'hidden' }}>
 
               {/* Foto principal — ocupa 2 linhas à esquerda */}
               <div
                 onClick={() => open(0)}
-                style={{ gridRow: galeria.length > 1 ? '1 / 3' : '1', position: 'relative', cursor: 'zoom-in', overflow: 'hidden', background: C.card, minHeight: galeria.length === 1 ? 420 : undefined }}
+                style={{ gridRow: galeria.length > 2 ? '1 / 3' : '1', position: 'relative', cursor: 'zoom-in', overflow: 'hidden', background: C.card, minHeight: galeria.length === 1 ? 420 : undefined }}
               >
                 <FotoCover src={f0} alt="Foto principal" style={{ width: '100%', height: '100%' }} />
               </div>
@@ -314,16 +317,14 @@ export default function ImovelPage() {
             )}
 
             {/* Localização */}
-            {mapaUrl && (
+            {temMapa && (
               <div style={{ marginTop: 36, paddingTop: 36, borderTop: `1px solid ${C.bs}` }}>
                 <Label>Localização</Label>
                 <p style={{ color: '#94a3b8', fontSize: 14, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <MapPin size={14} color={C.gold} style={{ flexShrink: 0 }} />
                   {[enderecoCompleto, imovel.cep].filter(Boolean).join(' — ')}
                 </p>
-                <div style={{ position: 'relative', height: 360, background: C.card, border: `1px solid ${C.bs}` }}>
-                  <iframe src={mapaUrl} title="Mapa do imóvel" loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
-                </div>
+                <MapaImovel lat={lat} lng={lng} zoom={16} style={{ height: 360, background: C.card, border: `1px solid ${C.bs}` }} />
               </div>
             )}
           </motion.div>

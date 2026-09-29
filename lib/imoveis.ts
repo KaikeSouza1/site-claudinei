@@ -1,6 +1,7 @@
 // lib/imoveis.ts
 // Regras compartilhadas pelas rotas de imóveis (uso no servidor).
 import type { PoolClient } from 'pg';
+import { geocodificar, type EnderecoGeo } from '@/lib/geocode';
 
 export const CAMPOS_IMOVEL = [
   'codigo', 'titulo', 'descricao', 'preco', 'tipo', 'finalidade',
@@ -72,6 +73,20 @@ export function normalizarImovel(body: Record<string, unknown>) {
     dados.area = a == null ? null : Math.round(a);
   }
   return dados;
+}
+
+/**
+ * Se o formulário veio sem latitude/longitude, calcula pelo endereço para o
+ * mapa do site funcionar. Não faz nada em atualizações parciais (ex.: reativar).
+ */
+export async function completarCoordenadas(dados: Record<string, unknown>) {
+  if (!('latitude' in dados) || !dados.cidade) return;
+  if (dados.latitude != null && dados.longitude != null) return;
+  const geo = await geocodificar(dados as EnderecoGeo);
+  if (geo) {
+    dados.latitude = geo.lat;
+    dados.longitude = geo.lng;
+  }
 }
 
 export function normalizarInterno(body: Record<string, unknown>) {
