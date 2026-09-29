@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne } from '@/lib/db';
 import { getOrCreateCustomer, criarBoleto } from '@/lib/asaas';
 
 type Params = { params: Promise<{ id: string }> };
@@ -8,13 +8,17 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { data: parcela, error } = await supabase
-    .from('parcelas')
-    .select('id, valor, status, data_vencimento, descricao, boleto_id, boleto_dados, contratos(id, cliente_nome, cliente_email, cliente_cpf, cliente_telefone, fintech_dados)')
-    .eq('id', id)
-    .single();
+  const parcela = await queryOne(
+    `SELECT p.id, p.valor, p.status, p.data_vencimento, p.descricao, p.boleto_id, p.boleto_dados,
+            json_build_object('id', c.id, 'cliente_nome', c.cliente_nome, 'cliente_email', c.cliente_email,
+                              'cliente_cpf', c.cliente_cpf, 'cliente_telefone', c.cliente_telefone,
+                              'fintech_dados', c.fintech_dados) AS contratos
+     FROM parcelas p LEFT JOIN contratos c ON c.id = p.contrato_id
+     WHERE p.id = $1`,
+    [id],
+  ).catch(() => null);
 
-  if (error || !parcela) {
+  if (!parcela) {
     return NextResponse.json({ error: 'Parcela não encontrada' }, { status: 404 });
   }
   if (parcela.status === 'pago') {
@@ -58,12 +62,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
         contrato.cliente_telefone,
       );
 
-      await supabase
-        .from('contratos')
-        .update({
-          fintech_dados: { ...(contrato.fintech_dados ?? {}), asaas_customer_id: asaasCustomerId },
-        })
-        .eq('id', contrato.id);
+      await query('UPDATE contratos SET fintech_dados = $2 WHERE id = $1', [
+        contrato.id,
+        { ...(contrato.fintech_dados ?? {}), asaas_customer_id: asaasCustomerId },
+      ]);
     }
 
     // ── Criar boleto ─────────────────────────────────────────────────────────
@@ -88,14 +90,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
       geradoEm:    new Date().toISOString(),
     };
 
-    await supabase
-      .from('parcelas')
-      .update({
-        boleto_id:   result.paymentId,
-        boleto_url:  result.bankSlipUrl,
-        boleto_dados: boletoData,
-      })
-      .eq('id', id);
+    await query('UPDATE parcelas SET boleto_id = $2, boleto_url = $3, boleto_dados = $4 WHERE id = $1', [
+      id, result.paymentId, result.bankSlipUrl, boletoData,
+    ]);
 
     return NextResponse.json({ reutilizado: false, ...boletoData });
   } catch (err: unknown) {

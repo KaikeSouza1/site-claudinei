@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne } from '@/lib/db';
 
 // Asaas envia o token no header 'asaas-access-token'
 // Configurado em: Painel Asaas → Integrações → Webhook → authToken
@@ -52,22 +52,16 @@ export async function POST(request: NextRequest) {
   let parcela: { id: number; valor: number; status: string } | null = null;
 
   // Tenta pelo boleto_id (payment.id do Asaas)
-  const { data: p1 } = await supabase
-    .from('parcelas')
-    .select('id, valor, status')
-    .eq('boleto_id', payment.id)
-    .maybeSingle();
+  const p1 = await queryOne('SELECT id, valor, status FROM parcelas WHERE boleto_id = $1 LIMIT 1', [payment.id]);
 
   if (p1) {
     parcela = p1;
   } else if (payment.externalReference?.startsWith('parcela_')) {
     // Fallback: localiza pelo externalReference
     const parcelaId = payment.externalReference.replace('parcela_', '');
-    const { data: p2 } = await supabase
-      .from('parcelas')
-      .select('id, valor, status')
-      .eq('id', parcelaId)
-      .maybeSingle();
+    const p2 = /^\d+$/.test(parcelaId)
+      ? await queryOne('SELECT id, valor, status FROM parcelas WHERE id = $1', [parcelaId])
+      : null;
     if (p2) parcela = p2;
   }
 
@@ -86,25 +80,32 @@ export async function POST(request: NextRequest) {
   const formaPgto  = payment.billingType === 'PIX' ? 'pix' : 'boleto';
   const dataPgto   = payment.paymentDate ?? new Date().toISOString().split('T')[0];
 
-  const { error: updateError } = await supabase
-    .from('parcelas')
-    .update({
-      status:          'pago',
-      data_pagamento:  dataPgto,
-      valor_pago:      valorPago,
-      forma_pagamento: formaPgto,
-      anotacoes:       `Baixa automática Asaas · Payment ID: ${payment.id} · Evento: ${event}`,
-      boleto_dados: {
-        provider:    'ASAAS',
-        billingType: payment.billingType ?? 'BOLETO',
-        paymentId:   payment.id,
-        status:      'RECEIVED',
+  let updateError: Error | null = null;
+  try {
+    await query(
+      `UPDATE parcelas SET status = 'pago', data_pagamento = $2, valor_pago = $3, forma_pagamento = $4,
+                           anotacoes = $5, boleto_dados = $6
+       WHERE id = $1`,
+      [
+        parcela.id,
+        dataPgto,
         valorPago,
-        pagoEm:      new Date().toISOString(),
-        evento:      event,
-      },
-    })
-    .eq('id', parcela.id);
+        formaPgto,
+        `Baixa automática Asaas · Payment ID: ${payment.id} · Evento: ${event}`,
+        {
+          provider:    'ASAAS',
+          billingType: payment.billingType ?? 'BOLETO',
+          paymentId:   payment.id,
+          status:      'RECEIVED',
+          valorPago,
+          pagoEm:      new Date().toISOString(),
+          evento:      event,
+        },
+      ],
+    );
+  } catch (err) {
+    updateError = err as Error;
+  }
 
   if (updateError) {
     console.error('[Asaas Webhook] Erro ao atualizar parcela:', updateError.message);

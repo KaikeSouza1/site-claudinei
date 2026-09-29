@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne, updateById } from '@/lib/db';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { data, error } = await supabase
-    .from('contratos')
-    .select('*, parcelas(*)')
-    .eq('id', id)
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-
-  if (data.parcelas) {
-    data.parcelas.sort((a: any, b: any) => a.numero - b.numero);
+  try {
+    const data = await queryOne(
+      `SELECT c.*,
+              COALESCE((SELECT json_agg(p ORDER BY p.numero) FROM parcelas p WHERE p.contrato_id = c.id), '[]'::json) AS parcelas
+       FROM contratos c WHERE c.id = $1`,
+      [id],
+    );
+    if (!data) return NextResponse.json({ error: 'Contrato não encontrado' }, { status: 404 });
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 404 });
   }
-
-  return NextResponse.json(data);
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
@@ -33,33 +32,28 @@ export async function PUT(request: NextRequest, { params }: Params) {
     'anotacoes', 'nfse_ativo', 'fintech_dados', 'nfse_dados',
   ];
 
-  const campos: Record<string, unknown> = {};
-  for (const campo of permitidos) {
-    if (campo in body) campos[campo] = body[campo];
+  try {
+    const data = await updateById('contratos', id, body, permitidos);
+    if (!data) return NextResponse.json({ error: 'Contrato não encontrado' }, { status: 404 });
+
+    // Se mudou valor_parcela ou total_parcelas, regenera parcelas pendentes
+    if (body.regenerar_parcelas) {
+      await query('SELECT gerar_parcelas($1)', [Number(id)]);
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
-
-  const { data, error } = await supabase
-    .from('contratos')
-    .update(campos)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Se mudou valor_parcela ou total_parcelas, regenera parcelas pendentes
-  if (body.regenerar_parcelas) {
-    await supabase.rpc('gerar_parcelas', { p_contrato_id: Number(id) });
-  }
-
-  return NextResponse.json(data);
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { error } = await supabase.from('contratos').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
+  try {
+    await query('DELETE FROM contratos WHERE id = $1', [id]);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

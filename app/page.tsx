@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Bed, Bath, Car, Maximize, ChevronRight, ChevronLeft, ArrowRight, Building2, Trees, Leaf, FileText } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import SmartSearch from '@/components/SmartSearch';
 import AvaliacaoImobiliaria from '@/components/AvaliacaoImobiliaria';
 import NumerosExpertise from '@/components/NumerosExpertise';
@@ -55,16 +54,11 @@ export default function Home() {
   useEffect(() => {
     async function fetchDestaques() {
       setCarregando(true);
-      const { data, error } = await supabase
-        .from('imoveis')
-        .select('*')
-        .eq('ativo', true)
-        .eq('destaque', true)
-        .or('status.is.null,status.eq.disponivel,status.eq.reservado')
-        .ilike('finalidade', abaAtiva === 'Venda' ? '%vend%' : '%loc%')
-        .limit(50);
+      const params = new URLSearchParams({ destaque: '1', limite: '50', finalidade: abaAtiva });
+      const res = await fetch(`/api/imoveis?${params}`).catch(() => null);
+      const data = res?.ok ? await res.json() : null;
 
-      if (data && !error) {
+      if (Array.isArray(data)) {
         const embaralhado = data.sort(() => 0.5 - Math.random()).slice(0, 7);
         setImoveisDestaque(embaralhado);
       } else {

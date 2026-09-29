@@ -17,7 +17,8 @@ export async function middleware(request: NextRequest) {
 
   // ── Determina se é rota admin (UI ou API) ─────────────────────────────────
   const isAdminUI   = pathname.startsWith('/admin');
-  const isAdminAPI  = pathname.startsWith('/api/admin');
+  // /api/upload grava no R2: só o painel pode usar
+  const isAdminAPI  = pathname.startsWith('/api/admin') || pathname.startsWith('/api/upload');
   const isLoginPage = pathname === '/login';
 
   if (!isAdminUI && !isAdminAPI && !isLoginPage) {
@@ -63,6 +64,7 @@ export const config = {
     '/admin/:path*',
     '/login',
     '/api/admin/:path*',
+    '/api/upload',
     '/api/auth/:path*',
     '/api/webhooks/:path*', // passa pelo early-return acima, não exige cookie
   ],

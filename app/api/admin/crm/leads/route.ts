@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, insertRow } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -8,22 +8,34 @@ export async function GET(request: NextRequest) {
   const prioridade = searchParams.get('prioridade');
   const busca      = searchParams.get('busca');
 
-  let query = supabase
-    .from('leads')
-    .select('*, atividades(id, tipo, criado_em)')
-    .order('criado_em', { ascending: false });
+  const where: string[] = [];
+  const params: unknown[] = [];
 
-  if (status    && status    !== 'todos') query = query.eq('status',    status);
-  if (origem    && origem    !== 'todos') query = query.eq('origem',    origem);
-  if (prioridade && prioridade !== 'todos') query = query.eq('prioridade', prioridade);
+  if (status     && status     !== 'todos') { params.push(status);     where.push(`l.status = $${params.length}`); }
+  if (origem     && origem     !== 'todos') { params.push(origem);     where.push(`l.origem = $${params.length}`); }
+  if (prioridade && prioridade !== 'todos') { params.push(prioridade); where.push(`l.prioridade = $${params.length}`); }
   if (busca) {
-    query = query.or(`nome.ilike.%${busca}%,email.ilike.%${busca}%,telefone.ilike.%${busca}%`);
+    params.push(`%${busca}%`);
+    const p = `$${params.length}`;
+    where.push(`(l.nome ILIKE ${p} OR l.email ILIKE ${p} OR l.telefone ILIKE ${p})`);
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data);
+  try {
+    const data = await query(
+      `SELECT l.*,
+              COALESCE((
+                SELECT json_agg(json_build_object('id', a.id, 'tipo', a.tipo, 'criado_em', a.criado_em))
+                FROM atividades a WHERE a.lead_id = l.id
+              ), '[]'::json) AS atividades
+       FROM leads l
+       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+       ORDER BY l.criado_em DESC`,
+      params,
+    );
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -33,9 +45,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from('leads')
-    .insert({
+  try {
+    const data = await insertRow('leads', {
       nome:                    body.nome,
       email:                   body.email                   || null,
       telefone:                body.telefone                || null,
@@ -46,11 +57,9 @@ export async function POST(request: NextRequest) {
       imovel_interesse_id:     body.imovel_interesse_id     || null,
       imovel_interesse_titulo: body.imovel_interesse_titulo || null,
       anotacoes:               body.anotacoes               || null,
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data, { status: 201 });
+    });
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

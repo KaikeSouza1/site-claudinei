@@ -8,7 +8,6 @@ import {
   Star, HomeIcon, ChevronLeft,
   ChevronRight, X, Heart, Share2, Grid3x3
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import FotoCover from '@/components/FotoCover';
 
@@ -73,17 +72,14 @@ export default function ImovelPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('imoveis').select('*').eq('id', id).eq('ativo', true).single();
-    if (error || !data) { router.push('/'); return; }
+    const res = await fetch(`/api/imoveis/${id}`).catch(() => null);
+    const data = res?.ok ? await res.json() : null;
+    if (!data) { router.push('/'); return; }
     setImovel(data);
-
-    const { data: fotos } = await supabase
-      .from('imovel_fotos').select('url').eq('imovel_id', id).order('ordem', { ascending: true });
 
     const urls = Array.from(new Set<string>([
       ...(data.imagem_url ? [data.imagem_url] : []),
-      ...(fotos?.map((f: any) => f.url) ?? []),
+      ...(data.fotos ?? []),
     ]));
     setGaleria(urls);
     setLoading(false);

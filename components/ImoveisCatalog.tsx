@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
 import FotoCover from '@/components/FotoCover'
 
 const tipos = ['Casa', 'Apartamento', 'Terreno', 'Comercial', 'Cobertura', 'Loja', 'Chácara']
@@ -65,41 +64,16 @@ export default function ImoveisCatalog({
     setError('')
     
     try {
-      let query = supabase
-        .from('imoveis')
-        .select('*')
-        .eq('ativo', true)
-        .or('status.is.null,status.eq.disponivel,status.eq.reservado')
+      const params = new URLSearchParams()
+      Object.entries(queryFilters).forEach(([key, value]) => {
+        if (value) params.set(key, value)
+      })
 
-      if (queryFilters.finalidade) {
-        query = query.ilike('finalidade', `%${queryFilters.finalidade.toLowerCase()}%`)
-      }
+      const res = await fetch(`/api/imoveis?${params}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Erro ao buscar imóveis')
 
-      if (queryFilters.tipo) {
-        query = query.eq('tipo', queryFilters.tipo)
-      }
-
-      if (queryFilters.localizacao) {
-        query = query.or(`cidade.ilike.%${queryFilters.localizacao}%,bairro.ilike.%${queryFilters.localizacao}%`)
-      }
-
-      if (queryFilters.busca) {
-        query = query.ilike('titulo', `%${queryFilters.busca}%`)
-      }
-
-      if (queryFilters.minPreco) {
-        query = query.gte('preco', parseFloat(queryFilters.minPreco))
-      }
-      if (queryFilters.maxPreco) {
-        query = query.lte('preco', parseFloat(queryFilters.maxPreco))
-      }
-
-      // CORREÇÃO: Alterado de 'created_at' para 'id' para evitar o erro de coluna inexistente
-      const { data, error: supabaseError } = await query.order('id', { ascending: false })
-
-      if (supabaseError) throw supabaseError
-
-      setImoveis(data || [])
+      setImoveis(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Erro ao buscar imóveis:', err)
       setError('Não foi possível carregar os imóveis.')

@@ -1,60 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne, updateById } from '@/lib/db';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { data, error } = await supabase
-    .from('leads')
-    .select('*, atividades(*)')
-    .eq('id', id)
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-
-  if (data.atividades) {
-    data.atividades.sort((a: any, b: any) =>
-      new Date(b.data_atividade).getTime() - new Date(a.data_atividade).getTime()
+  try {
+    const data = await queryOne(
+      `SELECT l.*,
+              COALESCE((SELECT json_agg(a ORDER BY a.data_atividade DESC) FROM atividades a WHERE a.lead_id = l.id), '[]'::json) AS atividades
+       FROM leads l WHERE l.id = $1`,
+      [id],
     );
+    if (!data) return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 404 });
   }
-
-  return NextResponse.json(data);
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const body   = await request.json();
 
-  const campos: Record<string, unknown> = {};
   const permitidos = [
     'nome', 'email', 'telefone', 'mensagem', 'origem',
     'status', 'prioridade', 'imovel_interesse_id',
     'imovel_interesse_titulo', 'anotacoes',
   ];
 
-  for (const campo of permitidos) {
-    if (campo in body) campos[campo] = body[campo];
+  try {
+    const data = await updateById('leads', id, body, permitidos);
+    if (!data) return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
-
-  const { data, error } = await supabase
-    .from('leads')
-    .update(campos)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data);
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { error } = await supabase.from('leads').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
+  try {
+    await query('DELETE FROM leads WHERE id = $1', [id]);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { insertRow } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -8,9 +8,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nome e telefone são obrigatórios' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from('leads')
-    .insert({
+  try {
+    const data = await insertRow('leads', {
       nome:                    body.nome.trim(),
       email:                   body.email?.trim()    || null,
       telefone:                body.telefone.trim(),
@@ -20,11 +19,9 @@ export async function POST(request: NextRequest) {
       prioridade:              'media',
       imovel_interesse_id:     body.imovel_id        || null,
       imovel_interesse_titulo: body.imovel_titulo    || null,
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true, id: data.id }, { status: 201 });
+    });
+    return NextResponse.json({ success: true, id: data.id }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

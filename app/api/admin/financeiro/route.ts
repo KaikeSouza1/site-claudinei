@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query } from '@/lib/db';
 
 export async function GET() {
   const hoje    = new Date().toISOString().split('T')[0];
@@ -8,16 +8,16 @@ export async function GET() {
     .toISOString().split('T')[0];
   const proximos7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
-  const [contratos, parcelas] = await Promise.all([
-    supabase.from('contratos').select('id, tipo, status, valor_parcela, total_parcelas'),
-    supabase.from('parcelas').select('id, status, valor, data_vencimento, valor_pago, contrato_id'),
-  ]);
-
-  if (contratos.error || parcelas.error) {
+  let contratos: { status: string }[];
+  let ps: { status: string; valor: number; data_vencimento: string; valor_pago: number | null }[];
+  try {
+    [contratos, ps] = await Promise.all([
+      query('SELECT id, tipo, status, valor_parcela, total_parcelas FROM contratos'),
+      query('SELECT id, status, valor, data_vencimento, valor_pago, contrato_id FROM parcelas'),
+    ]);
+  } catch {
     return NextResponse.json({ error: 'Erro ao buscar dados financeiros' }, { status: 500 });
   }
-
-  const ps = parcelas.data ?? [];
 
   const totalReceber   = ps.filter(p => p.status === 'pendente').reduce((s, p) => s + Number(p.valor), 0);
   const totalPagoMes   = ps
@@ -37,7 +37,7 @@ export async function GET() {
     .length;
 
   return NextResponse.json({
-    contratos_ativos:    (contratos.data ?? []).filter(c => c.status === 'ativo').length,
+    contratos_ativos:    contratos.filter(c => c.status === 'ativo').length,
     total_receber:       totalReceber,
     total_pago_mes:      totalPagoMes,
     total_atrasado:      totalAtrasado,

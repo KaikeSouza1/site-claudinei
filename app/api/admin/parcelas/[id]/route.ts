@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, updateById } from '@/lib/db';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -16,33 +16,29 @@ export async function PUT(request: NextRequest, { params }: Params) {
     'nfse_numero', 'nfse_url', 'nfse_dados',
   ];
 
-  const campos: Record<string, unknown> = {};
-  for (const campo of permitidos) {
-    if (campo in body) campos[campo] = body[campo];
-  }
+  const campos: Record<string, unknown> = { ...body };
 
   // Baixa automática: se não passou data_pagamento, usa hoje
   if (body.status === 'pago' && !body.data_pagamento) {
     campos.data_pagamento = new Date().toISOString().split('T')[0];
   }
 
-  const { data, error } = await supabase
-    .from('parcelas')
-    .update(campos)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data);
+  try {
+    const data = await updateById('parcelas', id, campos, permitidos);
+    if (!data) return NextResponse.json({ error: 'Parcela não encontrada' }, { status: 404 });
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { error } = await supabase.from('parcelas').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
+  try {
+    await query('DELETE FROM parcelas WHERE id = $1', [id]);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

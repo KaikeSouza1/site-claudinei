@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { Edit, Trash2, Plus, ExternalLink } from 'lucide-react';
 
 export default function AdminImoveisList() {
@@ -17,25 +16,28 @@ export default function AdminImoveisList() {
 
   async function buscarImoveis(ativosOnly = true) {
     setCarregando(true);
-    let query = supabase
-      .from('imoveis')
-      .select('*')
-      .order('criado_em', { ascending: false });
+    const res = await fetch(`/api/admin/imoveis${ativosOnly ? '?ativos=1' : ''}`);
+    const data = res.ok ? await res.json() : null;
 
-    if (ativosOnly) {
-      query = query.eq('ativo', true);
-    }
-
-    const { data, error } = await query;
-
-    if (data) setImoveis(data);
+    if (Array.isArray(data)) setImoveis(data);
     setCarregando(false);
   }
 
   async function reativarImovel(id: number) {
     if (!window.confirm("Tem certeza que deseja reativar este imóvel?")) return;
-    
-    await supabase.from('imoveis').update({ ativo: true }).eq('id', id);
+
+    await fetch(`/api/admin/imoveis/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ativo: true }),
+    });
+    buscarImoveis(!mostrarInativos); // Recarrega a lista
+  }
+
+  async function deletarImovel(id: number) {
+    if (!window.confirm("Tem certeza que deseja excluir este imóvel? Ele sai do site, mas pode ser reativado depois.")) return;
+
+    await fetch(`/api/admin/imoveis/${id}`, { method: 'DELETE' });
     buscarImoveis(!mostrarInativos); // Recarrega a lista
   }
 

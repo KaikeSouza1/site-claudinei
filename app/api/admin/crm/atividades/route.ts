@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, insertRow } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const leadId = new URL(request.url).searchParams.get('lead_id');
 
-  let query = supabase
-    .from('atividades')
-    .select('*')
-    .order('data_atividade', { ascending: false });
-
-  if (leadId) query = query.eq('lead_id', leadId);
-
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data);
+  try {
+    const data = leadId
+      ? await query('SELECT * FROM atividades WHERE lead_id = $1 ORDER BY data_atividade DESC', [leadId])
+      : await query('SELECT * FROM atividades ORDER BY data_atividade DESC');
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -24,28 +21,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'lead_id, tipo e descricao são obrigatórios' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from('atividades')
-    .insert({
+  try {
+    const data = await insertRow('atividades', {
       lead_id:        body.lead_id,
       tipo:           body.tipo,
       descricao:      body.descricao,
       data_atividade: body.data_atividade || new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data, { status: 201 });
+    });
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
 
 export async function DELETE(request: NextRequest) {
   const id = new URL(request.url).searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id é obrigatório' }, { status: 400 });
 
-  const { error } = await supabase.from('atividades').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
+  try {
+    await query('DELETE FROM atividades WHERE id = $1', [id]);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

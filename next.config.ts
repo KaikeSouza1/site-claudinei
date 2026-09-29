@@ -3,7 +3,6 @@ import type { NextConfig } from 'next';
 // Domínios permitidos para imagens externas
 const IMAGE_HOSTS = [
   'pub-574d165956bd4fa68acb1286fcafdd02.r2.dev',
-  'cpmvjvpaexspfwrxhjke.supabase.co',
 ];
 
 // Content-Security-Policy
@@ -19,8 +18,6 @@ const CSP = [
   "font-src 'self' data:",
   [
     "connect-src 'self'",
-    'https://*.supabase.co',
-    'wss://*.supabase.co',
     'https://api.asaas.com',
     'https://api-sandbox.asaas.com',
   ].join(' '),

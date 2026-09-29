@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne } from '@/lib/db';
 import { getOrCreateCustomer, criarBoleto } from '@/lib/asaas';
 
 type Params = { params: Promise<{ id: string }> };
@@ -8,16 +8,19 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { data: contrato, error } = await supabase
-    .from('contratos')
-    .select(`
-      id, cliente_nome, cliente_email, cliente_cpf, cliente_telefone, fintech_dados,
-      parcelas(id, valor, data_vencimento, descricao, status, boleto_id, boleto_dados)
-    `)
-    .eq('id', id)
-    .single();
+  const contrato = await queryOne(
+    `SELECT c.id, c.cliente_nome, c.cliente_email, c.cliente_cpf, c.cliente_telefone, c.fintech_dados,
+            COALESCE((
+              SELECT json_agg(json_build_object('id', p.id, 'valor', p.valor, 'data_vencimento', p.data_vencimento,
+                                                'descricao', p.descricao, 'status', p.status,
+                                                'boleto_id', p.boleto_id, 'boleto_dados', p.boleto_dados))
+              FROM parcelas p WHERE p.contrato_id = c.id
+            ), '[]'::json) AS parcelas
+     FROM contratos c WHERE c.id = $1`,
+    [id],
+  ).catch(() => null);
 
-  if (error || !contrato) {
+  if (!contrato) {
     return NextResponse.json({ error: 'Contrato não encontrado' }, { status: 404 });
   }
 
@@ -59,15 +62,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
         contrato.cliente_telefone,
       );
 
-      await supabase
-        .from('contratos')
-        .update({
-          fintech_dados: {
-            ...(contrato.fintech_dados ?? {}),
-            asaas_customer_id: asaasCustomerId,
-          },
-        })
-        .eq('id', id);
+      await query('UPDATE contratos SET fintech_dados = $2 WHERE id = $1', [
+        id,
+        { ...(contrato.fintech_dados ?? {}), asaas_customer_id: asaasCustomerId },
+      ]);
     }
 
     // ── Gerar boleto para cada parcela ────────────────────────────────────────
@@ -84,12 +82,11 @@ export async function POST(_req: NextRequest, { params }: Params) {
           asaasCustomerId!,
         );
 
-        await supabase
-          .from('parcelas')
-          .update({
-            boleto_id:    result.paymentId,
-            boleto_url:   result.bankSlipUrl,
-            boleto_dados: {
+        await query('UPDATE parcelas SET boleto_id = $2, boleto_url = $3, boleto_dados = $4 WHERE id = $1', [
+          parcela.id,
+          result.paymentId,
+          result.bankSlipUrl,
+          {
               provider:    'ASAAS',
               billingType: 'BOLETO',
               paymentId:   result.paymentId,
@@ -99,10 +96,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
               invoiceUrl:  result.invoiceUrl,
               nossoNumero: result.nossoNumero,
               dueDate:     result.dueDate,
-              geradoEm:    new Date().toISOString(),
-            },
-          })
-          .eq('id', parcela.id);
+            geradoEm:    new Date().toISOString(),
+          },
+        ]);
 
         gerados++;
       } catch (err) {

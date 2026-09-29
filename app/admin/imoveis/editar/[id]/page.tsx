@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { Save, Loader2, UploadCloud, X, Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
 import FotoCover from '@/components/FotoCover';
 
@@ -29,13 +28,10 @@ export default function EditarImovel() {
   useEffect(() => {
     async function carregarImovel() {
       // 1. Puxa os dados principais do imóvel
-      const { data: imovelData, error: imovelError } = await supabase
-        .from('imoveis')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const res = await fetch(`/api/admin/imoveis/${id}`).catch(() => null);
+      const imovelData = res?.ok ? await res.json() : null;
 
-      if (imovelError) {
+      if (!imovelData) {
         alert("Erro ao carregar os dados do imóvel.");
         router.push('/admin/imoveis');
         return;
@@ -65,13 +61,7 @@ export default function EditarImovel() {
         });
 
         // 2. Puxa as fotos da galeria (tabela imovel_fotos), respeitando a ordem salva
-        const { data: fotosData } = await supabase
-          .from('imovel_fotos')
-          .select('url')
-          .eq('imovel_id', id)
-          .order('ordem', { ascending: true });
-
-        const fotosUrls = fotosData ? fotosData.map(f => f.url) : [];
+        const fotosUrls: string[] = imovelData.fotos ?? [];
         
         // Coloca a foto de capa (se existir e não estiver na galeria) + fotos da galeria no estado
         const galeriaCompleta = new Set([...(imovelData.imagem_url ? [imovelData.imagem_url] : []), ...fotosUrls]);
@@ -139,44 +129,22 @@ export default function EditarImovel() {
   };
 
   // ==========================================
-  // ATUALIZAR TUDO NO SUPABASE
+  // ATUALIZAR TUDO NO BANCO
   // ==========================================
   const handleAtualizar = async (e: React.FormEvent) => {
     e.preventDefault();
     setSalvando(true);
-    
+
     try {
-      // 1. Atualiza a tabela principal 'imoveis'
-      const { error: updateError } = await supabase
-        .from('imoveis')
-        .update({ 
-          ...formData, 
-          preco: Number(formData.preco),
-          latitude: formData.latitude ? Number(formData.latitude) : null,
-          longitude: formData.longitude ? Number(formData.longitude) : null,
-        })
-        .eq('id', id);
+      // A API atualiza o imóvel e regrava a galeria (na ordem atual) numa única transação
+      const res = await fetch(`/api/admin/imoveis/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, galeria }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Erro ao atualizar imóvel');
 
-      if (updateError) throw updateError;
-
-      // 2. O jeito mais fácil e limpo de atualizar a galeria é deletar as antigas e salvar as novas
-      // Deleta as fotos atuais desse imóvel na tabela imovel_fotos
-      await supabase.from('imovel_fotos').delete().eq('imovel_id', id);
-
-      // Salva a nova configuração da galeria (ignorando a foto que virou capa para não duplicar, caso queira)
-      const fotosParaGaleria = galeria
-        .map((url, index) => ({ url, ordem: index }))
-        .filter(item => item.url !== formData.imagem_url);
-      if (fotosParaGaleria.length > 0) {
-        const fotosInsert = fotosParaGaleria.map(({ url, ordem }) => ({
-          imovel_id: id,
-          url,
-          ordem,
-        }));
-        const { error: fotosError } = await supabase.from('imovel_fotos').insert(fotosInsert);
-        if (fotosError) throw fotosError;
-      }
-      
       alert("Imóvel atualizado com sucesso!");
       router.push('/admin/imoveis');
     } catch (error) {

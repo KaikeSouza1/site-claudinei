@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, queryOne, insertRow } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -7,23 +7,34 @@ export async function GET(request: NextRequest) {
   const tipo    = searchParams.get('tipo');
   const busca   = searchParams.get('busca');
 
-  let query = supabase
-    .from('contratos')
-    .select('*, parcelas(id, status, data_vencimento, valor)')
-    .order('criado_em', { ascending: false });
+  const where: string[] = [];
+  const params: unknown[] = [];
 
-  if (status && status !== 'todos') query = query.eq('status', status);
-  if (tipo   && tipo   !== 'todos') query = query.eq('tipo',   tipo);
+  if (status && status !== 'todos') { params.push(status); where.push(`c.status = $${params.length}`); }
+  if (tipo   && tipo   !== 'todos') { params.push(tipo);   where.push(`c.tipo = $${params.length}`); }
   if (busca) {
-    query = query.or(
-      `cliente_nome.ilike.%${busca}%,imovel_titulo.ilike.%${busca}%,cliente_cpf.ilike.%${busca}%`
-    );
+    params.push(`%${busca}%`);
+    const p = `$${params.length}`;
+    where.push(`(c.cliente_nome ILIKE ${p} OR c.imovel_titulo ILIKE ${p} OR c.cliente_cpf ILIKE ${p})`);
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(data);
+  try {
+    const data = await query(
+      `SELECT c.*,
+              COALESCE((
+                SELECT json_agg(json_build_object('id', p.id, 'status', p.status,
+                                                  'data_vencimento', p.data_vencimento, 'valor', p.valor))
+                FROM parcelas p WHERE p.contrato_id = c.id
+              ), '[]'::json) AS parcelas
+       FROM contratos c
+       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+       ORDER BY c.criado_em DESC`,
+      params,
+    );
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -36,9 +47,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
-    .from('contratos')
-    .insert({
+  try {
+    const data = await insertRow('contratos', {
       lead_id:            body.lead_id             || null,
       imovel_id:          body.imovel_id            || null,
       cliente_nome:       body.cliente_nome.trim(),
@@ -59,20 +69,20 @@ export async function POST(request: NextRequest) {
       imovel_titulo:      body.imovel_titulo        || null,
       imovel_endereco:    body.imovel_endereco      || null,
       anotacoes:          body.anotacoes            || null,
-    })
-    .select()
-    .single();
+    });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Gera parcelas automaticamente via função SQL
+    await query('SELECT gerar_parcelas($1)', [data.id]);
 
-  // Gera parcelas automaticamente via função SQL
-  await supabase.rpc('gerar_parcelas', { p_contrato_id: data.id });
+    const contrato = await queryOne(
+      `SELECT c.*,
+              COALESCE((SELECT json_agg(p ORDER BY p.numero) FROM parcelas p WHERE p.contrato_id = c.id), '[]'::json) AS parcelas
+       FROM contratos c WHERE c.id = $1`,
+      [data.id],
+    );
 
-  const { data: contrato } = await supabase
-    .from('contratos')
-    .select('*, parcelas(*)')
-    .eq('id', data.id)
-    .single();
-
-  return NextResponse.json(contrato, { status: 201 });
+    return NextResponse.json(contrato, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

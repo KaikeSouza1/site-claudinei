@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { Home, Users, Eye, TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
@@ -23,11 +22,10 @@ export default function AdminDashboard() {
 
       try {
         // Busca estatísticas dos imóveis
-        const { data: imoveis, error } = await supabase
-          .from('imoveis')
-          .select('ativo, status');
+        const res = await fetch('/api/admin/imoveis');
+        const imoveis: { ativo: boolean; status: string | null }[] = res.ok ? await res.json() : [];
 
-        if (imoveis && !error) {
+        if (Array.isArray(imoveis)) {
           const stats = {
             totalImoveis: imoveis.length,
             imoveisAtivos: imoveis.filter(imovel => imovel.ativo).length,

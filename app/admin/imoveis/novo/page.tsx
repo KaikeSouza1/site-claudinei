@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Save, Loader2, UploadCloud, X, Star, MapPin, ChevronLeft, ChevronRight, Crop } from 'lucide-react';
 import Cropper, { Area } from 'react-easy-crop';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import FotoCover from '@/components/FotoCover';
 
@@ -212,36 +211,14 @@ export default function NovoImovel() {
     setSalvando(true);
     
     try {
-      // Limpa os dados removendo campos que não existem na tabela
-      const { galeria: _, ...dadosLimpos } = formData;
-      
-      const { data: imovelSalvo, error: imovelError } = await supabase
-        .from('imoveis')
-        .insert([{ 
-          ...dadosLimpos, 
-          preco: Number(formData.preco),
-          latitude: formData.latitude ? Number(formData.latitude) : null,
-          longitude: formData.longitude ? Number(formData.longitude) : null,
-        }])
-        .select()
-        .single();
-
-      if (imovelError) throw imovelError;
-
-      const fotosParaGaleria = galeria
-        .map((item, index) => ({ url: item.url, ordem: index }))
-        .filter(item => item.url !== formData.imagem_url);
-
-      if (fotosParaGaleria.length > 0 && imovelSalvo) {
-        const fotosInsert = fotosParaGaleria.map(({ url, ordem }) => ({
-          imovel_id: imovelSalvo.id,
-          url,
-          ordem,
-        }));
-
-        const { error: fotosError } = await supabase.from('imovel_fotos').insert(fotosInsert);
-        if (fotosError) throw fotosError;
-      }
+      // A API grava o imóvel e a galeria (na ordem atual) numa única transação
+      const res = await fetch('/api/admin/imoveis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, galeria: galeria.map((item) => item.url) }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Erro ao salvar imóvel');
       
       alert("Imóvel cadastrado com sucesso!");
       router.push('/admin/imoveis');

@@ -1,20 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { query, withTransaction } from '@/lib/db';
+import { normalizarImovel, salvarGaleria } from '@/lib/imoveis';
 
 export async function GET(request: NextRequest) {
-  const busca = new URL(request.url).searchParams.get('busca') ?? '';
+  const { searchParams } = new URL(request.url);
+  const busca  = searchParams.get('busca') ?? '';
+  const ativos = searchParams.get('ativos') === '1';
 
-  let query = supabase
-    .from('imoveis')
-    .select('id, titulo, endereco, bairro, cidade, preco, tipo, finalidade, status, imagem_url, quartos, area')
-    .order('criado_em', { ascending: false });
+  const where: string[] = [];
+  const params: unknown[] = [];
 
+  if (ativos) where.push('ativo = true');
   if (busca.trim()) {
-    query = query.or(`titulo.ilike.%${busca}%,endereco.ilike.%${busca}%,bairro.ilike.%${busca}%`);
+    params.push(`%${busca.trim()}%`);
+    where.push(`(titulo ILIKE $1 OR endereco ILIKE $1 OR bairro ILIKE $1)`);
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const data = await query(
+      `SELECT * FROM imoveis ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY criado_em DESC`,
+      params,
+    );
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
 
-  return NextResponse.json(data ?? []);
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const dados = normalizarImovel(body);
+
+  if (!dados.titulo || !dados.cidade || Number.isNaN(dados.preco)) {
+    return NextResponse.json({ error: 'titulo, cidade e preco são obrigatórios' }, { status: 400 });
+  }
+
+  try {
+    const imovel = await withTransaction(async (client) => {
+      const cols = Object.keys(dados);
+      const { rows } = await client.query(
+        `INSERT INTO imoveis (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING *`,
+        cols.map((c) => dados[c]),
+      );
+      const criado = rows[0];
+      await salvarGaleria(client, criado.id, Array.isArray(body.galeria) ? body.galeria : [], criado.imagem_url ?? '');
+      return criado;
+    });
+    return NextResponse.json(imovel, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }
