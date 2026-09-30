@@ -1,14 +1,27 @@
 // components/Header.tsx
+'use client'
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
+  const pathname = usePathname();
+
+  // Já na página inicial: o clique no nome só rola de volta ao topo
+  const voltarAoInicio = (e: React.MouseEvent) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="absolute top-0 w-full z-50">
       <div className="flex justify-between items-center px-10 py-8 max-w-7xl mx-auto">
-        <div>
-          <h1 className="font-serif text-2xl tracking-wide text-white">Claudiney W. Otto Junior.</h1>
+        <Link href="/" onClick={voltarAoInicio} className="group" title="Voltar ao início">
+          <h1 className="font-serif text-2xl tracking-wide text-white group-hover:text-gold transition-colors">Claudiney W. Otto Junior.</h1>
           <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016-PR • CNAI 45505</p>
-        </div>
+        </Link>
         
         <nav className="hidden md:flex gap-8 text-xs font-semibold tracking-widest text-slate-300 uppercase">
           <Link href="/" className="hover:text-gold transition-colors">Início</Link>
