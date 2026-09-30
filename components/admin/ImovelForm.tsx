@@ -4,9 +4,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cropper, { Area } from 'react-easy-crop';
 import {
-  Save, Loader2, UploadCloud, X, MapPin, ChevronLeft, ChevronRight, Crop,
+  Save, Loader2, UploadCloud, X, MapPin, Crop, Star, GripVertical,
   Lock, FileText, Trash2, Plus, Video, AlertTriangle, Search,
 } from 'lucide-react';
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import FotoCover from '@/components/FotoCover';
 import MapaImovel from '@/components/MapaImovel';
 import { TIPOS_IMOVEL, CARACTERISTICAS, CATEGORIAS_DOCUMENTO, videoEmbedUrl } from '@/lib/imovel-opcoes';
@@ -101,6 +109,56 @@ function Marcador({ checked, onChange, children }: { checked: boolean; onChange:
   );
 }
 
+// ─── Foto arrastável da galeria ───────────────────────────────────────────────
+
+function FotoArrastavel({ item, index, onCapa, onEditar, onRemover, onOrientacao }: {
+  item: GaleriaItem;
+  index: number;
+  onCapa: () => void;
+  onEditar: () => void;
+  onRemover: () => void;
+  onOrientacao: (img: HTMLImageElement) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const isCapa = index === 0;
+
+  return (
+    <div ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 20 : undefined }}
+      className={`rounded-lg overflow-hidden border-2 bg-[#1d2b3c] ${isDragging ? 'opacity-80 shadow-2xl scale-[1.03]' : ''} ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`}>
+      {/* Área de arrastar: a foto inteira */}
+      <div {...attributes} {...listeners} className="relative aspect-[3/2] cursor-grab active:cursor-grabbing touch-none select-none" title="Arraste para mudar a ordem">
+        <FotoCover src={item.url} alt={`Foto ${index + 1}`} className="w-full h-full pointer-events-none" />
+        {/* Detecta a orientação real da foto */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={item.url} alt="" className="hidden" onLoad={(e) => onOrientacao(e.currentTarget)} />
+        <span className="absolute top-2 right-2 flex items-center gap-0.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-slate-200">
+          <GripVertical size={11} /> {index + 1}
+        </span>
+        {isCapa && (
+          <div className="absolute bottom-0 left-0 w-full bg-gold text-[#04122b] text-[9px] font-black uppercase tracking-widest text-center py-1">Capa</div>
+        )}
+        {item.vertical && (
+          <div className="absolute top-2 left-2 rounded bg-amber-500 text-[#04122b] text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Vertical</div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-1 p-1.5">
+        <button type="button" onClick={onCapa} disabled={isCapa} title="Tornar capa (vai para o início)"
+          className="flex items-center justify-center gap-1 rounded-md bg-white/5 text-slate-200 py-1.5 text-[10px] uppercase hover:bg-gold/20 hover:text-gold disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-slate-200">
+          <Star size={12} /> Capa
+        </button>
+        <button type="button" onClick={onEditar} className="flex items-center justify-center gap-1 rounded-md bg-gold/15 text-gold py-1.5 text-[10px] uppercase hover:bg-gold/25">
+          <Crop size={12} /> Editar
+        </button>
+        <button type="button" onClick={onRemover} className="flex items-center justify-center gap-1 rounded-md bg-red-500/15 text-red-300 py-1.5 text-[10px] uppercase hover:bg-red-500/25">
+          <X size={12} /> Tirar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Formulário ───────────────────────────────────────────────────────────────
 
 export default function ImovelForm({ imovelId }: { imovelId?: string }) {
@@ -170,7 +228,6 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
       if (result.urls) {
         const novos: GaleriaItem[] = result.urls.map((url: string) => ({ id: gerarId(), url }));
         setGaleria((prev) => [...prev, ...novos]);
-        setForm((f) => (f.imagem_url || novos.length === 0 ? f : { ...f, imagem_url: novos[0].url }));
       } else {
         alert('Erro: ' + result.error);
       }
@@ -186,21 +243,31 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
     setGaleria((prev) => prev.map((g) => (g.id === id && g.vertical !== vertical ? { ...g, vertical } : g)));
   };
 
-  const moverFoto = (index: number, delta: number) => {
-    setGaleria((prev) => {
-      const target = index + delta;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+  // A primeira foto da galeria é sempre a capa
+  useEffect(() => {
+    const capa = galeria[0]?.url || '';
+    setForm((f) => (f.imagem_url === capa ? f : { ...f, imagem_url: capa }));
+  }, [galeria]);
+
+  const sensores = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),        // mouse: arrasta após 6px
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }), // celular: segurar e arrastar (rolagem continua normal)
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const aoSoltarFoto = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    setGaleria((prev) => arrayMove(
+      prev,
+      prev.findIndex((g) => g.id === active.id),
+      prev.findIndex((g) => g.id === over.id),
+    ));
   };
 
-  const removerFoto = (item: GaleriaItem) => {
-    const nova = galeria.filter((g) => g.id !== item.id);
-    setGaleria(nova);
-    if (form.imagem_url === item.url) set('imagem_url', nova[0]?.url || '');
-  };
+  const tornarCapa = (item: GaleriaItem) =>
+    setGaleria((prev) => [item, ...prev.filter((g) => g.id !== item.id)]);
+
+  const removerFoto = (item: GaleriaItem) => setGaleria((prev) => prev.filter((g) => g.id !== item.id));
 
   const abrirEditor = async (item: GaleriaItem) => {
     try {
@@ -256,7 +323,6 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
       if (!res.ok || !result.urls?.length) throw new Error(result.error || 'Erro ao enviar imagem editada');
       const novaUrl = result.urls[0];
       setGaleria((prev) => prev.map((g) => (g.id === editItem.id ? { id: g.id, url: novaUrl, vertical: false } : g)));
-      if (form.imagem_url === editItem.url) set('imagem_url', novaUrl);
       fecharEditor();
     } catch (error) {
       console.error(error);
@@ -442,8 +508,8 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
             </label>
           </div>
           <p className="text-xs text-slate-400 mb-6">
-            Use fotos <strong className="text-slate-200">horizontais</strong>, de preferência na proporção <strong className="text-slate-200">3:2</strong>.
-            Clique numa foto para torná-la capa. Em &quot;Editar&quot; o corte já sai em 3:2.
+            <strong className="text-slate-200">Arraste as fotos</strong> para mudar a ordem (no celular, segure e arraste). A <strong className="text-slate-200">primeira foto é a capa</strong>.
+            Use fotos horizontais, de preferência em 3:2. Em &quot;Editar&quot; o corte já sai em 3:2.
           </p>
 
           {verticais > 0 && (
@@ -460,37 +526,19 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
               <p className="text-xs opacity-60">As fotos recebem marca d&apos;água e vão para o Cloudflare R2.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {galeria.map((item, index) => {
-                const isCapa = item.url === form.imagem_url;
-                return (
-                  <div key={item.id} onClick={() => set('imagem_url', item.url)}
-                    className={`relative aspect-[3/2] rounded-lg overflow-hidden border-2 group cursor-pointer ${isCapa ? 'border-gold shadow-[0_0_15px_rgba(197,160,89,0.4)]' : 'border-slate-600'}`}>
-                    <FotoCover src={item.url} alt={`Foto ${index + 1}`} className="w-full h-full" />
-                    {/* Detecta a orientação real da foto */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.url} alt="" className="hidden" onLoad={(e) => marcarOrientacao(item.id, e.currentTarget)} />
-
-                    {isCapa && (
-                      <div className="absolute bottom-0 left-0 w-full bg-gold text-[#04122b] text-[9px] font-black uppercase tracking-widest text-center py-1">Capa</div>
-                    )}
-                    {item.vertical && (
-                      <div className="absolute top-2 left-2 rounded bg-amber-500 text-[#04122b] text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Vertical</div>
-                    )}
-
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                      <span className="text-[10px] uppercase tracking-widest text-slate-300">#{index + 1}</span>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, -1); }} disabled={index === 0} className="flex justify-center rounded-lg bg-white/10 text-white disabled:opacity-40 py-1.5"><ChevronLeft size={14} /></button>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); moverFoto(index, 1); }} disabled={index === galeria.length - 1} className="flex justify-center rounded-lg bg-white/10 text-white disabled:opacity-40 py-1.5"><ChevronRight size={14} /></button>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); abrirEditor(item); }} className="flex items-center justify-center gap-1 rounded-lg bg-gold/20 text-gold py-1.5 text-[10px] uppercase"><Crop size={12} /> Editar</button>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); removerFoto(item); }} className="flex items-center justify-center gap-1 rounded-lg bg-red-500/20 text-red-300 py-1.5 text-[10px] uppercase"><X size={12} /> Remover</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <DndContext sensors={sensores} collisionDetection={closestCenter} onDragEnd={aoSoltarFoto}>
+              <SortableContext items={galeria.map((g) => g.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {galeria.map((item, index) => (
+                    <FotoArrastavel key={item.id} item={item} index={index}
+                      onCapa={() => tornarCapa(item)}
+                      onEditar={() => abrirEditor(item)}
+                      onRemover={() => removerFoto(item)}
+                      onOrientacao={(img) => marcarOrientacao(item.id, img)} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           <div className="mt-8 pt-6 border-t border-slate-500/30 grid md:grid-cols-2 gap-6 items-start">
