@@ -7,7 +7,7 @@ export const TIPOS_IMOVEL = [
 ] as const;
 
 export const CARACTERISTICAS = [
-  'Sala de estar', 'Sala de jantar', 'Cozinha', 'Suíte', 'Sacada',
+  'Quarto', 'Sala de estar', 'Sala de jantar', 'Cozinha', 'Suíte', 'Banheiro social', 'Sacada',
   'Churrasqueira', 'Lavanderia', 'Quintal', 'Jardim', 'Portão eletrônico',
   'Aquecimento', 'Lareira', 'Área gourmet', 'Depósito',
   'Piscina', 'Closet', 'Escritório', 'Ar-condicionado', 'Mobiliado',

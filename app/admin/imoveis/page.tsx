@@ -3,12 +3,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Edit, Trash2, Plus, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Edit, Trash2, Plus, ExternalLink, Copy } from 'lucide-react';
 
 export default function AdminImoveisList() {
   const [imoveis, setImoveis] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [mostrarInativos, setMostrarInativos] = useState(false);
+  const [duplicando, setDuplicando] = useState<number | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     buscarImoveis(!mostrarInativos);
@@ -16,7 +19,7 @@ export default function AdminImoveisList() {
 
   async function buscarImoveis(ativosOnly = true) {
     setCarregando(true);
-    const res = await fetch(`/api/admin/imoveis${ativosOnly ? '?ativos=1' : ''}`);
+    const res = await fetch(`/api/admin/imoveis?ativos=${ativosOnly ? '1' : '0'}`);
     const data = res.ok ? await res.json() : null;
 
     if (Array.isArray(data)) setImoveis(data);
@@ -32,6 +35,16 @@ export default function AdminImoveisList() {
       body: JSON.stringify({ ativo: true }),
     });
     buscarImoveis(!mostrarInativos); // Recarrega a lista
+  }
+
+  async function duplicarImovel(imovel: { id: number; codigo: string | null }) {
+    if (!window.confirm(`Duplicar o anúncio ${imovel.codigo ?? ''}? A cópia recebe um código novo e abre para você ajustar (ex.: complemento).`)) return;
+    setDuplicando(imovel.id);
+    const res = await fetch(`/api/admin/imoveis/${imovel.id}/duplicar`, { method: 'POST' });
+    const copia = await res.json().catch(() => null);
+    setDuplicando(null);
+    if (!res.ok || !copia?.id) return alert(copia?.error || 'Erro ao duplicar o anúncio.');
+    router.push(`/admin/imoveis/editar/${copia.id}`);
   }
 
   async function deletarImovel(id: number) {
@@ -116,7 +129,10 @@ export default function AdminImoveisList() {
                       </div>
                       <div>
                         <p className="text-white font-medium line-clamp-1">{imovel.titulo}</p>
-                        <p className="text-xs text-slate-500">{imovel.cidade}</p>
+                        <p className="text-xs text-slate-500">
+                          {imovel.codigo && <span className="font-mono text-gold/80 mr-2">{imovel.codigo}</span>}
+                          {[imovel.complemento, imovel.cidade].filter(Boolean).join(' · ')}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -137,6 +153,9 @@ export default function AdminImoveisList() {
                       <Link href={`/admin/imoveis/editar/${imovel.id}`} className="text-slate-400 hover:text-gold transition-colors" title="Editar">
                         <Edit size={18} />
                       </Link>
+                      <button onClick={() => duplicarImovel(imovel)} disabled={duplicando !== null} className="text-slate-400 hover:text-gold transition-colors disabled:opacity-40" title="Duplicar anúncio">
+                        <Copy size={18} className={duplicando === imovel.id ? 'animate-pulse' : ''} />
+                      </button>
 
                       {mostrarInativos ? (
                         <button onClick={() => reativarImovel(imovel.id)} className="text-green-400 hover:text-green-300 transition-colors" title="Reativar">

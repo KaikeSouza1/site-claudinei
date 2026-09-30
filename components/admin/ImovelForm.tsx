@@ -566,6 +566,9 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
             </Campo>
             <Campo label="Título do Anúncio *" className="md:col-span-9">
               <input required type="text" value={form.titulo} onChange={(e) => set('titulo', e.target.value)} className={inputCls} />
+              {/R\$\s*\d/.test(form.titulo) && (
+                <p className="text-[11px] text-amber-300 mt-1.5">O valor já aparece ao lado do título no site. Tire o preço daqui para não ficar repetido.</p>
+              )}
             </Campo>
             <Campo label="Tipo do Imóvel" className="md:col-span-4">
               <select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} className={inputCls}>

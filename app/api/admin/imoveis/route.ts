@@ -5,12 +5,13 @@ import { completarCoordenadas, normalizarImovel, salvarGaleria, salvarInterno } 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const busca  = searchParams.get('busca') ?? '';
-  const ativos = searchParams.get('ativos') === '1';
+  const ativos = searchParams.get('ativos'); // '1' só ativos, '0' só inativos, ausente = todos
 
   const where: string[] = [];
   const params: unknown[] = [];
 
-  if (ativos) where.push('ativo = true');
+  if (ativos === '1') where.push('ativo = true');
+  if (ativos === '0') where.push('ativo = false');
   if (busca.trim()) {
     params.push(`%${busca.trim()}%`);
     where.push(`(titulo ILIKE $1 OR endereco ILIKE $1 OR bairro ILIKE $1)`);
