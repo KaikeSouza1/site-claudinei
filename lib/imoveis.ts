@@ -4,7 +4,7 @@ import type { PoolClient } from 'pg';
 import { geocodificar, type EnderecoGeo } from '@/lib/geocode';
 
 export const CAMPOS_IMOVEL = [
-  'codigo', 'titulo', 'descricao', 'preco', 'tipo', 'finalidade',
+  'codigo', 'titulo', 'descricao', 'preco', 'preco_sob_consulta', 'tipo', 'finalidade',
   'cep', 'estado', 'cidade', 'bairro', 'endereco', 'numero', 'complemento', 'latitude', 'longitude',
   'area_construida', 'area_terreno', 'quartos', 'suites', 'banheiros', 'vagas', 'pavimentos',
   'caracteristicas', 'imagem_url', 'video_url',
@@ -16,7 +16,7 @@ export const CAMPOS_IMOVEL = [
 // Colunas que o site público pode ver. Dados internos (proprietário, matrícula,
 // comissão...) ficam em imovel_interno e nunca devem entrar aqui.
 export const COLUNAS_PUBLICAS = [
-  'id', 'codigo', 'titulo', 'descricao', 'preco', 'tipo', 'finalidade',
+  'id', 'codigo', 'titulo', 'descricao', 'preco', 'preco_sob_consulta', 'tipo', 'finalidade',
   'cep', 'estado', 'cidade', 'bairro', 'endereco', 'numero', 'complemento', 'latitude', 'longitude',
   'area', 'area_construida', 'area_terreno', 'quartos', 'suites', 'banheiros', 'vagas', 'pavimentos',
   'caracteristicas', 'imagem_url', 'video_url',
@@ -41,12 +41,12 @@ const NUMERICOS_OPCIONAIS = [
 ];
 const BOOLEANOS = [
   'aceita_financiamento', 'aceita_fgts', 'aceita_permuta', 'aceita_negociacao',
-  'documentacao_regular', 'destaque', 'ativo',
+  'documentacao_regular', 'destaque', 'ativo', 'preco_sob_consulta',
   'possui_financiamento', 'financiamento_bancario', 'autorizacao_venda',
 ];
 
 function normalizarValor(campo: string, v: unknown) {
-  if (campo === 'preco') return Number(v);
+  if (campo === 'preco') return v === '' || v == null ? 0 : Number(v); // vazio só faz sentido com "a consultar"
   if (INTEIROS.includes(campo)) return v === '' || v == null ? 0 : Math.trunc(Number(v));
   if (NUMERICOS_OPCIONAIS.includes(campo)) return v === '' || v == null ? null : Number(v);
   if (BOOLEANOS.includes(campo)) return v === true || v === 'true';

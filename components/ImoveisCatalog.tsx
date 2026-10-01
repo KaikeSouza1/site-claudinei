@@ -5,13 +5,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Maximize, Search, SlidersHorizontal, X } from 'lucide-react'
 import FotoCover from '@/components/FotoCover'
-import { TIPOS_IMOVEL } from '@/lib/imovel-opcoes'
+import { TIPOS_IMOVEL, textoPreco } from '@/lib/imovel-opcoes'
 
 const tipos = [...TIPOS_IMOVEL]
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 
 function buildQueryString(filters: Record<string, string>) {
   const params = new URLSearchParams()
@@ -339,7 +335,7 @@ export default function ImoveisCatalog({
                   )}
 
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-500/20">
-                    <span className="font-serif text-xl text-gold">{formatMoney(imovel.preco)}</span>
+                    <span className="font-serif text-xl text-gold">{textoPreco(imovel)}</span>
                     <span className="text-[10px] text-slate-500 group-hover:text-gold transition-colors uppercase tracking-wider font-bold">
                       Ver detalhes →
                     </span>

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import FotoCover from '@/components/FotoCover';
-import { videoEmbedUrl } from '@/lib/imovel-opcoes';
+import { textoPreco, videoEmbedUrl } from '@/lib/imovel-opcoes';
 import MapaImovel from '@/components/MapaImovel';
 
 /* ── Design tokens — sem dependência de classes Tailwind externas ── */
@@ -81,7 +81,6 @@ export default function ImovelView({ imovel }: { imovel: any }) {
   }, [modal, galeria.length]);
 
 
-  const fmt  = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
   const open = (i: number) => { setIdx(i); setModal(true); };
   const prev = () => setIdx(p => (p - 1 + galeria.length) % galeria.length);
   const next = () => setIdx(p => (p + 1) % galeria.length);
@@ -157,9 +156,9 @@ export default function ImovelView({ imovel }: { imovel: any }) {
           <div style={{ textAlign: 'right' as const }}>
             <p style={{ fontSize: 10, color: '#475569', letterSpacing: '0.14em', textTransform: 'uppercase' as const, margin: '0 0 6px' }}>Valor</p>
             <span style={{ fontFamily: 'Georgia,"Times New Roman",serif', fontSize: 'clamp(26px, 3vw, 38px)', color: C.gold, lineHeight: 1, letterSpacing: '-0.01em' }}>
-              {fmt(imovel.preco)}
+              {textoPreco(imovel)}
             </span>
-            {isLocacao && (
+            {isLocacao && !imovel.preco_sob_consulta && (
               <span style={{ color: '#475569', fontSize: 14, marginLeft: 6 }}>/mês</span>
             )}
           </div>

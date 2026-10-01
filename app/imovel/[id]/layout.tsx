@@ -16,7 +16,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titulo = imovel.titulo.trim();
   const local = [imovel.bairro, [imovel.cidade, imovel.estado].filter(Boolean).join('/')].filter(Boolean).join(', ');
   const acao = /loca|alug/i.test(imovel.finalidade ?? '') ? 'para alugar' : 'à venda';
-  const resumo = `${imovel.tipo} ${acao} em ${local} por ${brl(Number(imovel.preco))}.`;
+  const resumo = imovel.preco_sob_consulta
+    ? `${imovel.tipo} ${acao} em ${local}. Valor a consultar.`
+    : `${imovel.tipo} ${acao} em ${local} por ${brl(Number(imovel.preco))}.`;
   const descricao = `${resumo} ${(imovel.descricao ?? '').replace(/\s+/g, ' ').trim()}`.slice(0, 300);
   const url = `${SITE_URL}/imovel/${id}`;
 

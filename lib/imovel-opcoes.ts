@@ -23,6 +23,12 @@ export const CATEGORIAS_DOCUMENTO = [
   { value: 'outro',       label: 'Outro' },
 ] as const;
 
+/** Preço como aparece no site: "A consultar" quando o corretor não quer divulgar o valor. */
+export function textoPreco(imovel: { preco: number | string | null; preco_sob_consulta?: boolean | null }) {
+  if (imovel.preco_sob_consulta) return 'A consultar';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(imovel.preco) || 0);
+}
+
 /** Converte links do YouTube/Vimeo em URL de player embutido. */
 export function videoEmbedUrl(url: string | null | undefined): string | null {
   if (!url) return null;

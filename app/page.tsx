@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Bed, Bath, Car, Maximize, ChevronRight, ChevronLeft, ArrowRight, Building2, Trees, Leaf, FileText } from 'lucide-react';
+import { textoPreco } from '@/lib/imovel-opcoes';
 import SmartSearch from '@/components/SmartSearch';
 import AvaliacaoImobiliaria from '@/components/AvaliacaoImobiliaria';
 import NumerosExpertise from '@/components/NumerosExpertise';
@@ -82,10 +83,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [imoveisDestaque.length]);
-
-  const formatarPreco = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
-  };
 
   const linkVerTodos = abaAtiva === 'Venda' ? '/imoveis/venda' : '/imoveis/aluguel';
   const labelVerTodos = abaAtiva === 'Venda' ? 'Ver todos à venda' : 'Ver todos para alugar';
@@ -335,7 +332,7 @@ export default function Home() {
                               {item.titulo}
                             </h3>
                             <p className="font-serif text-xl text-gold mb-4">
-                              {formatarPreco(item.preco)}
+                              {textoPreco(item)}
                             </p>
                             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
                               <span className="flex items-center gap-1.5">

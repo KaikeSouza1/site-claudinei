@@ -39,8 +39,7 @@ export function jsonLdImovel(imovel: ImovelPublico) {
     datePosted: imovel.criado_em ? String(imovel.criado_em).slice(0, 10) : undefined,
     offers: {
       '@type': 'Offer',
-      price: Number(imovel.preco),
-      priceCurrency: 'BRL',
+      ...(imovel.preco_sob_consulta ? {} : { price: Number(imovel.preco), priceCurrency: 'BRL' }),
       availability: imovel.status === 'reservado' ? 'https://schema.org/LimitedAvailability' : 'https://schema.org/InStock',
       businessFunction: isLocacao(imovel.finalidade) ? 'https://purl.org/goodrelations/v1#LeaseOut' : 'https://purl.org/goodrelations/v1#Sell',
       seller: { '@id': `${SITE_URL}/#corretor`, '@type': 'RealEstateAgent', name: CORRETOR.nome, telephone: CORRETOR.telefone },

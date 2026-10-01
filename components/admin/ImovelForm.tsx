@@ -27,7 +27,7 @@ type Documento = { id: number; nome: string; categoria: string; mime: string; ta
 type DocumentoPendente = { id: string; file: File; categoria: string };
 
 const IMOVEL_VAZIO = {
-  codigo: '', titulo: '', descricao: '', preco: '', tipo: 'Casa', finalidade: 'Venda',
+  codigo: '', titulo: '', descricao: '', preco: '', preco_sob_consulta: false, tipo: 'Casa', finalidade: 'Venda',
   cep: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '',
   latitude: '', longitude: '',
   area_construida: '', area_terreno: '',
@@ -582,8 +582,13 @@ export default function ImovelForm({ imovelId }: { imovelId?: string }) {
                 <option value="Locação">Locação</option>
               </select>
             </Campo>
-            <Campo label="Valor (R$) *" className="md:col-span-4">
-              <input required type="number" step="0.01" min="0" value={form.preco} onChange={(e) => set('preco', e.target.value)} className={inputCls} />
+            <Campo label={form.preco_sob_consulta ? 'Valor de referência (R$, interno)' : 'Valor (R$) *'} className="md:col-span-4">
+              <input required={!form.preco_sob_consulta} type="number" step="0.01" min="0" value={form.preco}
+                onChange={(e) => set('preco', e.target.value)} placeholder={form.preco_sob_consulta ? 'Opcional' : ''} className={inputCls} />
+              <label className="mt-2 flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                <input type="checkbox" checked={form.preco_sob_consulta} onChange={(e) => set('preco_sob_consulta', e.target.checked)} className="w-4 h-4 accent-gold cursor-pointer" />
+                Valor a consultar <span className="text-slate-500">(o site mostra &quot;A consultar&quot;)</span>
+              </label>
             </Campo>
           </div>
         </Secao>

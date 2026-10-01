@@ -140,7 +140,10 @@ export default function AdminImoveisList() {
                         {imovel.finalidade}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-serif text-gold">{formatarPreco(imovel.preco)}</td>
+                    <td className="px-6 py-4 font-serif text-gold">
+                      {formatarPreco(imovel.preco)}
+                      {imovel.preco_sob_consulta && <span className="block font-sans text-[10px] uppercase tracking-wider text-slate-400">no site: a consultar</span>}
+                    </td>
                     <td className="px-6 py-4">
                       {renderizarStatus(imovel.status || 'disponivel')}
                     </td>
