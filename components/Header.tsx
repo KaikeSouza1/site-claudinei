@@ -19,7 +19,7 @@ export default function Header() {
     <header className="absolute top-0 w-full z-50">
       <div className="flex justify-between items-center px-10 py-8 max-w-7xl mx-auto">
         <Link href="/" onClick={voltarAoInicio} className="group" title="Voltar ao início">
-          <h1 className="font-serif text-2xl tracking-wide text-white group-hover:text-gold transition-colors">Claudiney W. Otto Junior.</h1>
+          <p className="font-serif text-2xl tracking-wide text-white group-hover:text-gold transition-colors">Claudiney W. Otto Junior.</p>
           <p className="text-[10px] tracking-widest text-gold mt-1 uppercase opacity-80">CRECI 37016-PR • CNAI 45505</p>
         </Link>
         

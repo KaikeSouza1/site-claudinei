@@ -61,6 +61,18 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Endereço único para o Google: o domínio da Vercel redireciona para o oficial
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'site-claudinei.vercel.app' }],
+        destination: 'https://www.claudineyottojrimoveis.com.br/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   // Headers de segurança aplicados a todas as rotas
   async headers() {
     return [

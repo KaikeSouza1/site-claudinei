@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, withTransaction } from '@/lib/db';
+import { revalidarImovel } from '@/lib/revalidar';
 import { completarCoordenadas, normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 type Params = { params: Promise<{ id: string }> };
@@ -55,6 +56,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     });
 
     if (!imovel) return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 });
+    revalidarImovel(id);
     return NextResponse.json(imovel);
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
@@ -67,6 +69,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   try {
     await query('UPDATE imoveis SET ativo = false WHERE id = $1', [id]);
+    revalidarImovel(id);
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

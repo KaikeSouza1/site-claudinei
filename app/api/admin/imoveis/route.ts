@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, withTransaction } from '@/lib/db';
+import { revalidarImovel } from '@/lib/revalidar';
 import { completarCoordenadas, normalizarImovel, salvarGaleria, salvarInterno } from '@/lib/imoveis';
 
 export async function GET(request: NextRequest) {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
       if (body.interno && typeof body.interno === 'object') await salvarInterno(client, criado.id, body.interno);
       return criado;
     });
+    revalidarImovel(imovel.id);
     return NextResponse.json(imovel, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

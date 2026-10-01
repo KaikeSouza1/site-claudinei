@@ -15,6 +15,12 @@ export default function Footer() {
           <p className="text-xs tracking-[0.2em] opacity-70">
             CRECI 37016-PR • CNAI 45505
           </p>
+          <p className="text-sm pt-2 font-sans">
+            Corretor e avaliador de imóveis em União da Vitória/PR e Porto União/SC
+          </p>
+          <a href="https://wa.me/5542984156013" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-sans text-gold hover:underline">
+            WhatsApp (42) 98415-6013
+          </a>
         </div>
 
         {/* Linha divisória fina */}

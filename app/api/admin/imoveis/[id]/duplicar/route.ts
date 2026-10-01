@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withTransaction } from '@/lib/db';
+import { revalidarImovel } from '@/lib/revalidar';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -51,6 +52,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     });
 
     if (!copia) return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 });
+    revalidarImovel(copia.id);
     return NextResponse.json(copia, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
